@@ -1,0 +1,80 @@
+{
+  "context": {
+    "projeto": "Trabalho Prático de Programação Distribuída",
+    "instituicao": "Universidade Federal do Rio Grande do Norte - DIMAp",
+    "objetivo_geral": "Desenvolver um sistema distribuído tolerante a falhas, suportando múltiplos protocolos de comunicação (UDP, TCP/HTTP e gRPC), implementado de forma modular e alinhado a padrões de sistemas distribuídos e padrões GoF. O sistema deverá ser testado com JMeter para avaliar desempenho, capacidade e resiliência.",
+    "restricoes": {
+      "desenvolvimento": "Individual",
+      "padrões_distribuidos": ["Version Vector para controle de concorrência e causalidade"],
+      "padrões_gof": [
+        "Strategy (para escolher protocolo em tempo de execução)",
+        "Observer (monitoramento via heartbeat)",
+        "Singleton (API Gateway como ponto único de entrada)",
+        "Proxy (encaminhamento de requisições pelo Gateway)"
+      ],
+      "testes": {
+        "ferramenta": "Apache JMeter",
+        "requisitos": [
+          "Criar cenários com ramp-up, plateau e ramp-down",
+          "Medições de throughput, tempo de resposta e taxa de erro",
+          "Determinar Knee Capacity e Usable Capacity"
+        ]
+      }
+    },
+    "arquitetura": {
+      "componentes": [
+        {
+          "nome": "API Gateway",
+          "responsabilidades": [
+            "Receber requisições dos clientes (ex.: JMeter)",
+            "Descobrir dinamicamente e registrar componentes ativos",
+            "Encaminhar requisições para serviços disponíveis",
+            "Manter monitoramento via heartbeat e atualizar tabela de instâncias"
+          ]
+        },
+        {
+          "nome": "Serviço de Coleta de Sensores",
+          "responsabilidades": [
+            "Receber leituras de sensores (mensagens com id, valor, timestamp)",
+            "Gerenciar Version Vector para cada sensor",
+            "Armazenar leituras em memória local",
+            "Replicar dados entre instâncias (principalmente via gRPC)"
+          ]
+        },
+        {
+          "nome": "Serviço de Consulta/Agrupamento",
+          "responsabilidades": [
+            "Fornecer APIs para histórico, agregações (mín, máx, média)",
+            "Atender consultas do JMeter ou clientes externos",
+            "Integrar-se ao Gateway para roteamento dinâmico"
+          ]
+        },
+        {
+          "nome": "Banco de Dados Interno",
+          "tecnologia": "Estruturas em memória (HashMap/ConcurrentHashMap ou similar)",
+          "dados": {
+            "sensor_id": "string",
+            "valor": "float",
+            "timestamp": "string",
+            "version_vector": "mapa nó->contador"
+          }
+        }
+      ]
+    },
+    "dominio": {
+      "descricao": "Sistema de IoT para coleta de dados de sensores distribuídos. Cada sensor envia leituras periódicas (valor e timestamp). O sistema deve tolerar falhas de instâncias, replicar dados com consistência eventual e detectar conflitos de atualização usando Version Vector.",
+      "fluxo": [
+        "Sensores enviam dados ao API Gateway",
+        "Gateway encaminha para Serviços de Coleta ativos",
+        "Serviço de Coleta registra e mantém versionamento",
+        "Dados podem ser consultados por Serviços de Consulta",
+        "Heartbeat garante resiliência — novas instâncias podem ser adicionadas/detectadas dinamicamente"
+      ]
+    },
+    "evolucao_planejada": {
+      "primeiro_passo": "Implementar e validar toda comunicação usando UDP, mantendo o projeto minimalista e documentando cada etapa para facilitar futuras expansões e a explicação do código para o professor",
+      "futuro": "Expandir suporte para TCP/HTTP e gRPC utilizando Strategy; manter a lógica de negócio intacta ao trocar o protocolo"
+    }
+  },
+  "task": "Preparar contexto para que o Copilot entenda integralmente o trabalho, a arquitetura planejada e os padrões aplicados antes de gerar código. O próximo passo será receber instruções detalhadas para implementar o primeiro protocolo (UDP) de forma modular e testável."
+}

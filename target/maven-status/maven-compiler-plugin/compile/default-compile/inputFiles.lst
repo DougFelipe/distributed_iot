@@ -1,0 +1,14 @@
+D:\distribuida\src\main\java\br\ufrn\dimap\communication\udp\UDPCommunicationStrategy.java
+D:\distribuida\src\main\java\br\ufrn\dimap\core\Message.java
+D:\distribuida\src\main\java\br\ufrn\dimap\core\Node.java
+D:\distribuida\src\main\java\br\ufrn\dimap\components\BaseComponent.java
+D:\distribuida\src\main\java\br\ufrn\dimap\Application.java
+D:\distribuida\src\main\java\br\ufrn\dimap\patterns\strategy\MessageHandler.java
+D:\distribuida\src\main\java\br\ufrn\dimap\patterns\observer\HeartbeatSubject.java
+D:\distribuida\src\main\java\br\ufrn\dimap\components\ComponentA.java
+D:\distribuida\src\main\java\br\ufrn\dimap\core\SystemConfig.java
+D:\distribuida\src\main\java\br\ufrn\dimap\UDPDemoApplication.java
+D:\distribuida\src\main\java\br\ufrn\dimap\patterns\observer\HeartbeatObserver.java
+D:\distribuida\src\main\java\br\ufrn\dimap\patterns\singleton\APIGateway.java
+D:\distribuida\src\main\java\br\ufrn\dimap\patterns\strategy\CommunicationStrategy.java
+D:\distribuida\src\main\java\br\ufrn\dimap\components\ComponentB.java

@@ -1,0 +1,147 @@
+2025-09-26 15:41:27.795 [main] INFO  [br.ufrn.dimap.patterns.observer.HeartbeatSubject] - Monitoramento de heartbeat iniciado (timeout: 30s)
+2025-09-26 15:41:27.798 [main] DEBUG [br.ufrn.dimap.patterns.observer.HeartbeatSubject] - Observer adicionado: APIGateway
+2025-09-26 15:41:27.798 [main] INFO  [br.ufrn.dimap.patterns.singleton.APIGateway] - API Gateway criado com ID: API-GATEWAY-1758912087791
+2025-09-26 15:41:50.956 [br.ufrn.dimap.Application.main()] INFO  [br.ufrn.dimap.Application] - === SISTEMA DISTRIBUÍDO - SPRINT 1 ===
+2025-09-26 15:41:50.958 [br.ufrn.dimap.Application.main()] INFO  [br.ufrn.dimap.Application] - 1. Testando Sistema de Configuração...
+2025-09-26 15:41:50.968 [br.ufrn.dimap.Application.main()] INFO  [br.ufrn.dimap.Application] - Configuração carregada: SystemConfig{port=8080, protocol='UDP', componentType='COMPONENT_A', heartbeatTimeout=30}
+2025-09-26 15:41:50.977 [br.ufrn.dimap.Application.main()] INFO  [br.ufrn.dimap.Application] - ✅ Sistema de configuração funcionando corretamente
+2025-09-26 15:41:50.977 [br.ufrn.dimap.Application.main()] INFO  [br.ufrn.dimap.Application] - 2. Testando Padrão Singleton (API Gateway)...
+2025-09-26 15:41:50.985 [br.ufrn.dimap.Application.main()] INFO  [br.ufrn.dimap.patterns.observer.HeartbeatSubject] - Monitoramento de heartbeat iniciado (timeout: 30s)
+2025-09-26 15:41:50.985 [br.ufrn.dimap.Application.main()] DEBUG [br.ufrn.dimap.patterns.observer.HeartbeatSubject] - Observer adicionado: APIGateway
+2025-09-26 15:41:50.985 [br.ufrn.dimap.Application.main()] INFO  [br.ufrn.dimap.patterns.singleton.APIGateway] - API Gateway criado com ID: API-GATEWAY-1758912110980
+2025-09-26 15:41:50.985 [br.ufrn.dimap.Application.main()] INFO  [br.ufrn.dimap.Application] - ✅ Padrão Singleton implementado corretamente
+2025-09-26 15:41:50.985 [br.ufrn.dimap.Application.main()] INFO  [br.ufrn.dimap.Application] - Gateway ID: API-GATEWAY-1758912110980
+2025-09-26 15:41:50.985 [br.ufrn.dimap.Application.main()] INFO  [br.ufrn.dimap.Application] - Gateway status: APIGateway{id='API-GATEWAY-1758912110980', protocol='NONE', running=false, registeredNodes=0, activeNodes=0}
+2025-09-26 15:41:50.995 [br.ufrn.dimap.Application.main()] INFO  [br.ufrn.dimap.Application] - 3. Testando Padrão Observer (Heartbeat)...
+2025-09-26 15:41:50.995 [br.ufrn.dimap.Application.main()] INFO  [br.ufrn.dimap.Application] - ✅ Padrão Observer integrado ao Gateway
+2025-09-26 15:41:50.995 [br.ufrn.dimap.Application.main()] INFO  [br.ufrn.dimap.Application] - Nós registrados: 0
+2025-09-26 15:41:50.996 [br.ufrn.dimap.Application.main()] INFO  [br.ufrn.dimap.Application] - Nós ativos: 0
+2025-09-26 15:41:50.996 [br.ufrn.dimap.Application.main()] INFO  [br.ufrn.dimap.Application] - === SPRINT 1 CONCLUÍDA COM SUCESSO ===
+2025-09-26 15:59:12.147 [pool-2-thread-1] INFO  [b.u.d.communication.udp.UDPCommunicationStrategy] - Iniciando escuta de mensagens UDP na porta 9999
+2025-09-26 15:59:12.147 [main] INFO  [b.u.d.communication.udp.UDPCommunicationStrategy] - Servidor UDP iniciado na porta 9999
+2025-09-26 15:59:12.152 [pool-2-thread-1] INFO  [b.u.d.communication.udp.UDPCommunicationStrategy] - Parou de escutar mensagens UDP
+2025-09-26 15:59:12.152 [main] INFO  [b.u.d.communication.udp.UDPCommunicationStrategy] - Servidor UDP parado (porta 9999)
+2025-09-26 15:59:12.173 [main] INFO  [b.u.d.communication.udp.UDPCommunicationStrategy] - Servidor UDP iniciado na porta 9999
+2025-09-26 15:59:12.173 [pool-3-thread-1] INFO  [b.u.d.communication.udp.UDPCommunicationStrategy] - Iniciando escuta de mensagens UDP na porta 9999
+2025-09-26 15:59:12.357 [pool-3-thread-1] INFO  [b.u.d.communication.udp.UDPCommunicationStrategy] - Parou de escutar mensagens UDP
+2025-09-26 15:59:12.357 [main] INFO  [b.u.d.communication.udp.UDPCommunicationStrategy] - Servidor UDP parado (porta 9999)
+2025-09-26 15:59:12.361 [main] INFO  [b.u.d.communication.udp.UDPCommunicationStrategy] - Servidor UDP iniciado na porta 9999
+2025-09-26 15:59:12.361 [pool-4-thread-1] INFO  [b.u.d.communication.udp.UDPCommunicationStrategy] - Iniciando escuta de mensagens UDP na porta 9999
+2025-09-26 15:59:12.471 [pool-4-thread-1] INFO  [b.u.d.communication.udp.UDPCommunicationStrategy] - Parou de escutar mensagens UDP
+2025-09-26 15:59:12.471 [main] INFO  [b.u.d.communication.udp.UDPCommunicationStrategy] - Servidor UDP parado (porta 9999)
+2025-09-26 15:59:13.739 [main] ERROR [b.u.d.communication.udp.UDPCommunicationStrategy] - Erro ao enviar mensagem UDP para invalid-host-xyz:9999 - Este host não é conhecido (invalid-host-xyz)
+2025-09-26 15:59:13.765 [main] INFO  [br.ufrn.dimap.components.BaseComponent] - Componente criado: COMPONENT_A-1758913153762 [COMPONENT_A]
+2025-09-26 15:59:13.765 [main] INFO  [br.ufrn.dimap.components.ComponentA] - Dados iniciais carregados no Componente A
+2025-09-26 15:59:13.774 [main] INFO  [br.ufrn.dimap.components.BaseComponent] - Componente criado: COMPONENT_A-1758913153774 [COMPONENT_A]
+2025-09-26 15:59:13.774 [main] INFO  [br.ufrn.dimap.components.ComponentA] - Dados iniciais carregados no Componente A
+2025-09-26 15:59:13.777 [main] INFO  [br.ufrn.dimap.components.BaseComponent] - Componente criado: COMPONENT_A-1758913153777 [COMPONENT_A]
+2025-09-26 15:59:13.778 [main] INFO  [br.ufrn.dimap.components.ComponentA] - Dados iniciais carregados no Componente A
+2025-09-26 15:59:13.780 [main] INFO  [br.ufrn.dimap.components.BaseComponent] - Componente criado: COMPONENT_A-1758913153780 [COMPONENT_A]
+2025-09-26 15:59:13.782 [main] INFO  [br.ufrn.dimap.components.ComponentA] - Dados iniciais carregados no Componente A
+2025-09-26 15:59:13.783 [main] INFO  [br.ufrn.dimap.components.ComponentA] - Processando requisição #1: test request
+2025-09-26 15:59:13.894 [main] INFO  [br.ufrn.dimap.components.ComponentA] - Requisição #1 processada com sucesso
+2025-09-26 15:59:13.896 [main] INFO  [br.ufrn.dimap.components.BaseComponent] - Componente criado: COMPONENT_A-1758913153896 [COMPONENT_A]
+2025-09-26 15:59:13.896 [main] INFO  [br.ufrn.dimap.components.ComponentA] - Dados iniciais carregados no Componente A
+2025-09-26 15:59:13.897 [main] INFO  [br.ufrn.dimap.components.BaseComponent] - Estratégia de comunicação configurada: UDP
+2025-09-26 15:59:13.897 [main] INFO  [b.u.d.communication.udp.UDPCommunicationStrategy] - Servidor UDP iniciado na porta 8091
+2025-09-26 15:59:13.897 [pool-12-thread-1] INFO  [b.u.d.communication.udp.UDPCommunicationStrategy] - Iniciando escuta de mensagens UDP na porta 8091
+2025-09-26 15:59:13.901 [main] INFO  [br.ufrn.dimap.components.BaseComponent] - Registro enviado ao Gateway localhost:9090
+2025-09-26 15:59:13.901 [main] INFO  [br.ufrn.dimap.components.BaseComponent] - Heartbeat iniciado para componente COMPONENT_A-1758913153896
+2025-09-26 15:59:13.902 [main] INFO  [br.ufrn.dimap.components.BaseComponent] - Componente COMPONENT_A-1758913153896 iniciado na porta 8091 usando protocolo UDP
+2025-09-26 15:59:13.902 [main] INFO  [b.u.d.communication.udp.UDPCommunicationStrategy] - Servidor UDP parado (porta 8091)
+2025-09-26 15:59:13.902 [pool-12-thread-1] INFO  [b.u.d.communication.udp.UDPCommunicationStrategy] - Parou de escutar mensagens UDP
+2025-09-26 15:59:13.902 [main] INFO  [br.ufrn.dimap.components.BaseComponent] - Componente COMPONENT_A-1758913153896 parado
+2025-09-26 15:59:13.929 [main] INFO  [br.ufrn.dimap.patterns.observer.HeartbeatSubject] - Monitoramento de heartbeat iniciado (timeout: 30s)
+2025-09-26 15:59:13.929 [main] DEBUG [br.ufrn.dimap.patterns.observer.HeartbeatSubject] - Observer adicionado: APIGateway
+2025-09-26 15:59:13.929 [main] INFO  [br.ufrn.dimap.patterns.singleton.APIGateway] - API Gateway criado com ID: API-GATEWAY-1758913153926
+2025-09-26 16:00:08.814 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.UDPDemoApplication] - === SISTEMA DISTRIBUÍDO - SPRINT 2 - DEMONSTRAÇÃO UDP ===
+2025-09-26 16:00:08.820 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.UDPDemoApplication] - 1. Iniciando API Gateway...
+2025-09-26 16:00:08.828 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.patterns.observer.HeartbeatSubject] - Monitoramento de heartbeat iniciado (timeout: 30s)
+2025-09-26 16:00:08.829 [br.ufrn.dimap.UDPDemoApplication.main()] DEBUG [br.ufrn.dimap.patterns.observer.HeartbeatSubject] - Observer adicionado: APIGateway
+2025-09-26 16:00:08.829 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.patterns.singleton.APIGateway] - API Gateway criado com ID: API-GATEWAY-1758913208822
+2025-09-26 16:00:08.976 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.patterns.singleton.APIGateway] - Estratégia de comunicação configurada: UDP
+2025-09-26 16:00:08.987 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [b.u.d.communication.udp.UDPCommunicationStrategy] - Servidor UDP iniciado na porta 9090
+2025-09-26 16:00:08.987 [pool-2-thread-1] INFO  [b.u.d.communication.udp.UDPCommunicationStrategy] - Iniciando escuta de mensagens UDP na porta 9090
+2025-09-26 16:00:08.987 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.patterns.singleton.APIGateway] - API Gateway iniciado na porta 9090 usando protocolo UDP
+2025-09-26 16:00:09.997 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.UDPDemoApplication] - 2. Iniciando Componentes A e B...
+2025-09-26 16:00:10.003 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.components.BaseComponent] - Componente criado: COMPONENT_A-1758913210000 [COMPONENT_A]
+2025-09-26 16:00:10.004 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.components.ComponentA] - Dados iniciais carregados no Componente A
+2025-09-26 16:00:10.004 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.components.BaseComponent] - Estratégia de comunicação configurada: UDP
+2025-09-26 16:00:10.005 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [b.u.d.communication.udp.UDPCommunicationStrategy] - Servidor UDP iniciado na porta 8081
+2025-09-26 16:00:10.005 [pool-4-thread-1] INFO  [b.u.d.communication.udp.UDPCommunicationStrategy] - Iniciando escuta de mensagens UDP na porta 8081
+2025-09-26 16:00:10.053 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.components.BaseComponent] - Registro enviado ao Gateway localhost:9090
+2025-09-26 16:00:10.054 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.components.BaseComponent] - Heartbeat iniciado para componente COMPONENT_A-1758913210000
+2025-09-26 16:00:10.054 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.components.BaseComponent] - Componente COMPONENT_A-1758913210000 iniciado na porta 8081 usando protocolo UDP
+2025-09-26 16:00:10.056 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.components.BaseComponent] - Componente criado: COMPONENT_B-1758913210056 [COMPONENT_B]
+2025-09-26 16:00:10.056 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.components.ComponentB] - Sistema de análise inicializado no Componente B
+2025-09-26 16:00:10.058 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.components.BaseComponent] - Estratégia de comunicação configurada: UDP
+2025-09-26 16:00:10.058 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [b.u.d.communication.udp.UDPCommunicationStrategy] - Servidor UDP iniciado na porta 8082
+2025-09-26 16:00:10.058 [pool-6-thread-1] INFO  [b.u.d.communication.udp.UDPCommunicationStrategy] - Iniciando escuta de mensagens UDP na porta 8082
+2025-09-26 16:00:10.060 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.components.BaseComponent] - Registro enviado ao Gateway localhost:9090
+2025-09-26 16:00:10.060 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.components.BaseComponent] - Heartbeat iniciado para componente COMPONENT_B-1758913210056
+2025-09-26 16:00:10.060 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.components.BaseComponent] - Componente COMPONENT_B-1758913210056 iniciado na porta 8082 usando protocolo UDP
+2025-09-26 16:00:10.081 [pool-2-thread-3] INFO  [br.ufrn.dimap.patterns.singleton.APIGateway] - Mensagem recebida no Gateway de 127.0.0.1:52518 - Type: REGISTER
+2025-09-26 16:00:10.081 [pool-2-thread-2] INFO  [br.ufrn.dimap.patterns.singleton.APIGateway] - Mensagem recebida no Gateway de 127.0.0.1:52517 - Type: REGISTER
+2025-09-26 16:00:10.082 [pool-2-thread-3] INFO  [br.ufrn.dimap.patterns.singleton.APIGateway] - Novo nó disponível para roteamento: COMPONENT_B-1758913210056
+2025-09-26 16:00:10.082 [pool-2-thread-2] INFO  [br.ufrn.dimap.patterns.singleton.APIGateway] - Novo nó disponível para roteamento: COMPONENT_A-1758913210000
+2025-09-26 16:00:10.082 [pool-2-thread-3] INFO  [br.ufrn.dimap.patterns.observer.HeartbeatSubject] - Nó registrado: Node{id='COMPONENT_B-1758913210056', type='COMPONENT_B', address='127.0.0.1:8082', active=true, lastHeartbeat=2025-09-26T16:00:10.082591700}
+2025-09-26 16:00:10.082 [pool-2-thread-2] INFO  [br.ufrn.dimap.patterns.observer.HeartbeatSubject] - Nó registrado: Node{id='COMPONENT_A-1758913210000', type='COMPONENT_A', address='127.0.0.1:8081', active=true, lastHeartbeat=2025-09-26T16:00:10.082591700}
+2025-09-26 16:00:10.091 [pool-2-thread-3] INFO  [br.ufrn.dimap.patterns.singleton.APIGateway] - Componente registrado: COMPONENT_B-1758913210056 [127.0.0.1:8082]
+2025-09-26 16:00:10.091 [pool-2-thread-2] INFO  [br.ufrn.dimap.patterns.singleton.APIGateway] - Componente registrado: COMPONENT_A-1758913210000 [127.0.0.1:8081]
+2025-09-26 16:00:10.094 [pool-2-thread-2] INFO  [br.ufrn.dimap.patterns.singleton.APIGateway] - Nó registrado via UDP: COMPONENT_A-1758913210000 [127.0.0.1:8081]
+2025-09-26 16:00:10.094 [pool-2-thread-3] INFO  [br.ufrn.dimap.patterns.singleton.APIGateway] - Nó registrado via UDP: COMPONENT_B-1758913210056 [127.0.0.1:8082]
+2025-09-26 16:00:12.063 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.UDPDemoApplication] - 3. Testando descoberta de componentes...
+2025-09-26 16:00:12.064 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.components.BaseComponent] - Solicitação de descoberta enviada ao Gateway
+2025-09-26 16:00:12.065 [pool-2-thread-3] INFO  [br.ufrn.dimap.patterns.singleton.APIGateway] - Mensagem recebida no Gateway de 127.0.0.1:60323 - Type: DISCOVERY
+2025-09-26 16:00:12.065 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.components.BaseComponent] - Solicitação de descoberta enviada ao Gateway
+2025-09-26 16:00:12.065 [pool-2-thread-2] INFO  [br.ufrn.dimap.patterns.singleton.APIGateway] - Mensagem recebida no Gateway de 127.0.0.1:60324 - Type: DISCOVERY
+2025-09-26 16:00:12.069 [pool-2-thread-2] DEBUG [br.ufrn.dimap.patterns.singleton.APIGateway] - Resposta de descoberta enviada para 127.0.0.1:60324
+2025-09-26 16:00:12.069 [pool-2-thread-3] DEBUG [br.ufrn.dimap.patterns.singleton.APIGateway] - Resposta de descoberta enviada para 127.0.0.1:60323
+2025-09-26 16:00:13.075 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.UDPDemoApplication] - 4. Testando comunicação entre componentes...
+2025-09-26 16:00:13.076 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.components.ComponentA] - Dados enviados via Gateway: test_key=test_value_from_A
+2025-09-26 16:00:13.076 [pool-2-thread-3] INFO  [br.ufrn.dimap.patterns.singleton.APIGateway] - Mensagem recebida no Gateway de 127.0.0.1:53847 - Type: PROCESS_DATA
+2025-09-26 16:00:13.076 [pool-2-thread-3] WARN  [br.ufrn.dimap.patterns.singleton.APIGateway] - Tipo de mensagem não reconhecido: PROCESS_DATA
+2025-09-26 16:00:13.077 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.components.ComponentA] - Solicitação de dados enviada via Gateway: status
+2025-09-26 16:00:13.077 [pool-2-thread-3] INFO  [br.ufrn.dimap.patterns.singleton.APIGateway] - Mensagem recebida no Gateway de 127.0.0.1:53848 - Type: DATA_REQUEST
+2025-09-26 16:00:13.077 [pool-2-thread-3] WARN  [br.ufrn.dimap.patterns.singleton.APIGateway] - Tipo de mensagem não reconhecido: DATA_REQUEST
+2025-09-26 16:00:13.078 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.components.ComponentB] - Solicitação de análise enviada via Gateway: 24 chars
+2025-09-26 16:00:13.078 [pool-2-thread-3] INFO  [br.ufrn.dimap.patterns.singleton.APIGateway] - Mensagem recebida no Gateway de 127.0.0.1:53849 - Type: ANALYZE_DATA
+2025-09-26 16:00:13.078 [pool-2-thread-3] WARN  [br.ufrn.dimap.patterns.singleton.APIGateway] - Tipo de mensagem não reconhecido: ANALYZE_DATA
+2025-09-26 16:00:13.079 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.components.ComponentB] - Solicitação de relatório 'status' enviada via Gateway
+2025-09-26 16:00:13.079 [pool-2-thread-3] INFO  [br.ufrn.dimap.patterns.singleton.APIGateway] - Mensagem recebida no Gateway de 127.0.0.1:53850 - Type: GENERATE_REPORT
+2025-09-26 16:00:13.079 [pool-2-thread-3] WARN  [br.ufrn.dimap.patterns.singleton.APIGateway] - Tipo de mensagem não reconhecido: GENERATE_REPORT
+2025-09-26 16:00:15.094 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.UDPDemoApplication] - 5. Status do sistema:
+2025-09-26 16:00:15.094 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.UDPDemoApplication] - Gateway: APIGateway{id='API-GATEWAY-1758913208822', protocol='UDP', running=true, registeredNodes=2, activeNodes=2}
+2025-09-26 16:00:15.097 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.UDPDemoApplication] - Nós registrados: 2
+2025-09-26 16:00:15.098 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.UDPDemoApplication] - Nós ativos: 2
+2025-09-26 16:00:15.098 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.UDPDemoApplication] - ComponentA Stats - Requests: 0, Data Items: 3, Status: RUNNING
+2025-09-26 16:00:15.098 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.UDPDemoApplication] - ComponentB Stats - Analyses: 0, Reports: 0, Data: 0, Status: RUNNING
+2025-09-26 16:00:15.098 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.UDPDemoApplication] - 6. Aguardando heartbeats... (30 segundos)
+2025-09-26 16:00:20.066 [pool-2-thread-2] INFO  [br.ufrn.dimap.patterns.singleton.APIGateway] - Mensagem recebida no Gateway de 127.0.0.1:55522 - Type: HEARTBEAT
+2025-09-26 16:00:20.066 [pool-2-thread-3] INFO  [br.ufrn.dimap.patterns.singleton.APIGateway] - Mensagem recebida no Gateway de 127.0.0.1:55523 - Type: HEARTBEAT
+2025-09-26 16:00:20.066 [pool-2-thread-2] DEBUG [br.ufrn.dimap.patterns.singleton.APIGateway] - Heartbeat recebido do nó: COMPONENT_A-1758913210000
+2025-09-26 16:00:20.066 [pool-2-thread-3] DEBUG [br.ufrn.dimap.patterns.singleton.APIGateway] - Heartbeat recebido do nó: COMPONENT_B-1758913210056
+2025-09-26 16:00:20.066 [pool-2-thread-3] DEBUG [br.ufrn.dimap.patterns.observer.HeartbeatSubject] - Heartbeat atualizado para nó: COMPONENT_B-1758913210056
+2025-09-26 16:00:20.066 [pool-2-thread-2] DEBUG [br.ufrn.dimap.patterns.observer.HeartbeatSubject] - Heartbeat atualizado para nó: COMPONENT_A-1758913210000
+2025-09-26 16:00:20.066 [pool-2-thread-3] DEBUG [br.ufrn.dimap.patterns.singleton.APIGateway] - Heartbeat processado para nó: COMPONENT_B-1758913210056
+2025-09-26 16:00:20.066 [pool-2-thread-2] DEBUG [br.ufrn.dimap.patterns.singleton.APIGateway] - Heartbeat processado para nó: COMPONENT_A-1758913210000
+2025-09-26 16:00:35.056 [pool-2-thread-2] INFO  [br.ufrn.dimap.patterns.singleton.APIGateway] - Mensagem recebida no Gateway de 127.0.0.1:59163 - Type: HEARTBEAT
+2025-09-26 16:00:35.056 [pool-2-thread-2] DEBUG [br.ufrn.dimap.patterns.singleton.APIGateway] - Heartbeat recebido do nó: COMPONENT_A-1758913210000
+2025-09-26 16:00:35.057 [pool-2-thread-2] DEBUG [br.ufrn.dimap.patterns.observer.HeartbeatSubject] - Heartbeat atualizado para nó: COMPONENT_A-1758913210000
+2025-09-26 16:00:35.057 [pool-2-thread-2] DEBUG [br.ufrn.dimap.patterns.singleton.APIGateway] - Heartbeat processado para nó: COMPONENT_A-1758913210000
+2025-09-26 16:00:35.072 [pool-2-thread-2] INFO  [br.ufrn.dimap.patterns.singleton.APIGateway] - Mensagem recebida no Gateway de 127.0.0.1:53629 - Type: HEARTBEAT
+2025-09-26 16:00:35.072 [pool-2-thread-2] DEBUG [br.ufrn.dimap.patterns.singleton.APIGateway] - Heartbeat recebido do nó: COMPONENT_B-1758913210056
+2025-09-26 16:00:35.072 [pool-2-thread-2] DEBUG [br.ufrn.dimap.patterns.observer.HeartbeatSubject] - Heartbeat atualizado para nó: COMPONENT_B-1758913210056
+2025-09-26 16:00:35.072 [pool-2-thread-2] DEBUG [br.ufrn.dimap.patterns.singleton.APIGateway] - Heartbeat processado para nó: COMPONENT_B-1758913210056
+2025-09-26 16:00:45.113 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.UDPDemoApplication] - 7. Finalizando sistema...
+2025-09-26 16:00:45.113 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [b.u.d.communication.udp.UDPCommunicationStrategy] - Servidor UDP parado (porta 8081)
+2025-09-26 16:00:45.114 [pool-4-thread-1] INFO  [b.u.d.communication.udp.UDPCommunicationStrategy] - Parou de escutar mensagens UDP
+2025-09-26 16:00:45.114 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.components.BaseComponent] - Componente COMPONENT_A-1758913210000 parado
+2025-09-26 16:00:45.114 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [b.u.d.communication.udp.UDPCommunicationStrategy] - Servidor UDP parado (porta 8082)
+2025-09-26 16:00:45.114 [pool-6-thread-1] INFO  [b.u.d.communication.udp.UDPCommunicationStrategy] - Parou de escutar mensagens UDP
+2025-09-26 16:00:45.114 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.components.BaseComponent] - Componente COMPONENT_B-1758913210056 parado
+2025-09-26 16:00:45.115 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [b.u.d.communication.udp.UDPCommunicationStrategy] - Servidor UDP parado (porta 9090)
+2025-09-26 16:00:45.115 [pool-2-thread-1] INFO  [b.u.d.communication.udp.UDPCommunicationStrategy] - Parou de escutar mensagens UDP
+2025-09-26 16:00:45.115 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.patterns.observer.HeartbeatSubject] - Monitoramento de heartbeat finalizado
+2025-09-26 16:00:45.115 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.patterns.singleton.APIGateway] - API Gateway parado
+2025-09-26 16:00:45.115 [br.ufrn.dimap.UDPDemoApplication.main()] INFO  [br.ufrn.dimap.UDPDemoApplication] - === DEMONSTRAÇÃO UDP CONCLUÍDA COM SUCESSO ===
