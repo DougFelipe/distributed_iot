@@ -31,15 +31,20 @@ public class APIGateway implements HeartbeatObserver, MessageHandler {
     
     // Construtor privado para garantir Singleton
     private APIGateway() {
+        this(30); // 30 segundos timeout padrão
+    }
+    
+    // Construtor com timeout personalizado (para testes)
+    protected APIGateway(int heartbeatTimeoutSeconds) {
         this.id = "API-GATEWAY-" + System.currentTimeMillis();
         this.registeredNodes = new ConcurrentHashMap<>();
-        this.heartbeatSubject = new HeartbeatSubject(30); // 30 segundos timeout
+        this.heartbeatSubject = new HeartbeatSubject(heartbeatTimeoutSeconds);
         this.running = false;
         
         // Registra-se como observer do heartbeat
         this.heartbeatSubject.addObserver(this);
         
-        logger.info("API Gateway criado com ID: {}", id);
+        logger.info("API Gateway criado com ID: {} (timeout: {}s)", id, heartbeatTimeoutSeconds);
     }
     
     /**
@@ -54,6 +59,14 @@ public class APIGateway implements HeartbeatObserver, MessageHandler {
             }
         }
         return instance;
+    }
+    
+    /**
+     * Cria uma nova instância para testes (quebra temporariamente o singleton)
+     * APENAS para uso em testes
+     */
+    public static APIGateway createTestInstance(int heartbeatTimeoutSeconds) {
+        return new APIGateway(heartbeatTimeoutSeconds);
     }
     
     /**
@@ -124,6 +137,20 @@ public class APIGateway implements HeartbeatObserver, MessageHandler {
      */
     public void updateComponentHeartbeat(String nodeId) {
         heartbeatSubject.updateHeartbeat(nodeId);
+    }
+    
+    /**
+     * Alias para updateComponentHeartbeat (compatibilidade)
+     */
+    public void updateHeartbeat(String nodeId) {
+        updateComponentHeartbeat(nodeId);
+    }
+    
+    /**
+     * Retorna o HeartbeatSubject para acesso direto (necessário para testes)
+     */
+    public HeartbeatSubject getHeartbeatSubject() {
+        return heartbeatSubject;
     }
     
     /**
