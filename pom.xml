@@ -164,7 +164,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
-                    <mainClass>br.ufrn.dimap.applications.NativeIoTServerApplication</mainClass>
+                    <mainClass>br.ufrn.dimap.applications.IoTDistributedSystem</mainClass>
                 </configuration>
                 <executions>
                     <!-- Sprint 2: UDP Demo -->

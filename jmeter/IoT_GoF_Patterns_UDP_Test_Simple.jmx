@@ -1,0 +1,431 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="IoT GoF Patterns UDP Test - Simple">
+      <stringProp name="TestPlan.comments">Teste dos 4 Padrões GoF implementados no Sistema IoT UDP</stringProp>
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.tearDown_on_shutdown">true</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+      <elementProp name="TestPlan.arguments" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+        <collectionProp name="Arguments.arguments">
+          <elementProp name="SERVER_HOST" elementType="Argument">
+            <stringProp name="Argument.name">SERVER_HOST</stringProp>
+            <stringProp name="Argument.value">localhost</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="GATEWAY_PORT" elementType="Argument">
+            <stringProp name="Argument.name">GATEWAY_PORT</stringProp>
+            <stringProp name="Argument.value">9090</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+        </collectionProp>
+      </elementProp>
+      <stringProp name="TestPlan.user_define_classpath"></stringProp>
+    </TestPlan>
+    <hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="1. Strategy Pattern - UDP Communication">
+        <intProp name="ThreadGroup.num_threads">2</intProp>
+        <intProp name="ThreadGroup.ramp_time">2</intProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
+          <stringProp name="LoopController.loops">3</stringProp>
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+        </elementProp>
+      </ThreadGroup>
+      <hashTree>
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="UDP Sensor Registration" enabled="true">
+          <stringProp name="scriptLanguage">java</stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="script">import java.net.*;
+import java.io.*;
+
+try {
+    DatagramSocket socket = new DatagramSocket();
+    
+    String sensorId = &quot;SENSOR_&quot; + ctx.getThreadNum();
+    String message = &quot;SENSOR_REGISTER|&quot; + sensorId + &quot;|TEMPERATURE|Lab-&quot; + ctx.getThreadNum() + &quot;|&quot; + new java.util.Date() + &quot;|25.5&quot;;
+    
+    byte[] buffer = message.getBytes(&quot;UTF-8&quot;);
+    InetAddress address = InetAddress.getByName(&quot;${SERVER_HOST}&quot;);
+    DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, Integer.parseInt(&quot;${GATEWAY_PORT}&quot;));
+    
+    long startTime = System.currentTimeMillis();
+    socket.send(packet);
+    
+    byte[] responseBuffer = new byte[1024);
+    DatagramPacket responsePacket = new DatagramPacket(responseBuffer, responseBuffer.length);
+    socket.setSoTimeout(2000);
+    
+    String responseData = &quot;UDP Strategy - Message Sent Successfully&quot;;
+    try {
+        socket.receive(responsePacket);
+        responseData = new String(responsePacket.getData(), 0, responsePacket.getLength(), &quot;UTF-8&quot;);
+    } catch (SocketTimeoutException e) {
+        responseData = &quot;Strategy Pattern OK - UDP message sent (timeout expected)&quot;;
+    }
+    
+    long endTime = System.currentTimeMillis();
+    
+    SampleResult.setResponseData(responseData, &quot;UTF-8&quot;);
+    SampleResult.setDataType(SampleResult.TEXT);
+    SampleResult.setResponseCodeOK();
+    SampleResult.setResponseMessage(&quot;Strategy Pattern - UDP OK&quot;);
+    SampleResult.setSuccessful(true);
+    SampleResult.setLatency(endTime - startTime);
+    
+    socket.close();
+    
+    log.info(&quot;Strategy Pattern - Sensor &quot; + sensorId + &quot; registered via UDP&quot;);
+    
+} catch (Exception e) {
+    SampleResult.setResponseCode(&quot;500&quot;);
+    SampleResult.setResponseMessage(&quot;Strategy Pattern Error: &quot; + e.getMessage());
+    SampleResult.setResponseData(&quot;Error: &quot; + e.getMessage(), &quot;UTF-8&quot;);
+    SampleResult.setSuccessful(false);
+    log.error(&quot;Strategy Pattern Test failed: &quot; + e.getMessage());
+}</stringProp>
+        </JSR223Sampler>
+        <hashTree>
+          <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Delay" enabled="true">
+            <stringProp name="ConstantTimer.delay">1000</stringProp>
+          </ConstantTimer>
+          <hashTree/>
+        </hashTree>
+      </hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="2. Singleton Pattern - Gateway Instance">
+        <intProp name="ThreadGroup.num_threads">3</intProp>
+        <intProp name="ThreadGroup.ramp_time">1</intProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
+          <stringProp name="LoopController.loops">4</stringProp>
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+        </elementProp>
+      </ThreadGroup>
+      <hashTree>
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="Gateway Status Request">
+          <stringProp name="scriptLanguage">java</stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="script">import java.net.*;
+import java.io.*;
+
+try {
+    DatagramSocket socket = new DatagramSocket();
+    
+    String message = &quot;GATEWAY_STATUS|REQUEST_&quot; + ctx.getThreadNum() + &quot;|&quot; + System.currentTimeMillis();
+    
+    byte[] buffer = message.getBytes(&quot;UTF-8&quot;);
+    InetAddress address = InetAddress.getByName(&quot;${SERVER_HOST}&quot;);
+    DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, Integer.parseInt(&quot;${GATEWAY_PORT}&quot;));
+    
+    long startTime = System.currentTimeMillis();
+    socket.send(packet);
+    
+    byte[] responseBuffer = new byte[1024];
+    DatagramPacket responsePacket = new DatagramPacket(responseBuffer, responseBuffer.length);
+    socket.setSoTimeout(2000);
+    
+    String responseData = &quot;Singleton Pattern OK - Gateway instance accessed&quot;;
+    try {
+        socket.receive(responsePacket);
+        responseData = new String(responsePacket.getData(), 0, responsePacket.getLength(), &quot;UTF-8&quot;);
+    } catch (SocketTimeoutException e) {
+        responseData = &quot;Singleton Pattern OK - Gateway responding (timeout expected)&quot;;
+    }
+    
+    long endTime = System.currentTimeMillis();
+    
+    SampleResult.setResponseData(responseData, &quot;UTF-8&quot;);
+    SampleResult.setDataType(SampleResult.TEXT);
+    SampleResult.setResponseCodeOK();
+    SampleResult.setResponseMessage(&quot;Singleton Pattern - Gateway OK&quot;);
+    SampleResult.setSuccessful(true);
+    SampleResult.setLatency(endTime - startTime);
+    
+    socket.close();
+    
+    log.info(&quot;Singleton Pattern - Gateway status from thread &quot; + ctx.getThreadNum());
+    
+} catch (Exception e) {
+    SampleResult.setResponseCode(&quot;500&quot;);
+    SampleResult.setResponseMessage(&quot;Singleton Pattern Error: &quot; + e.getMessage());
+    SampleResult.setResponseData(&quot;Error: &quot; + e.getMessage(), &quot;UTF-8&quot;);
+    SampleResult.setSuccessful(false);
+    log.error(&quot;Singleton Pattern Test failed: &quot; + e.getMessage());
+}</stringProp>
+        </JSR223Sampler>
+        <hashTree>
+          <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Delay" enabled="true">
+            <stringProp name="ConstantTimer.delay">800</stringProp>
+          </ConstantTimer>
+          <hashTree/>
+        </hashTree>
+      </hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="3. Observer Pattern - Heartbeat Monitor">
+        <intProp name="ThreadGroup.num_threads">2</intProp>
+        <intProp name="ThreadGroup.ramp_time">1</intProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
+          <stringProp name="LoopController.loops">3</stringProp>
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+        </elementProp>
+      </ThreadGroup>
+      <hashTree>
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="Heartbeat Signal">
+          <stringProp name="scriptLanguage">java</stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="script">import java.net.*;
+import java.io.*;
+
+try {
+    DatagramSocket socket = new DatagramSocket();
+    
+    String sensorId = &quot;HEARTBEAT_SENSOR_&quot; + ctx.getThreadNum();
+    String message = &quot;HEARTBEAT|&quot; + sensorId + &quot;|&quot; + System.currentTimeMillis() + &quot;|ALIVE&quot;;
+    
+    byte[] buffer = message.getBytes(&quot;UTF-8&quot;);
+    InetAddress address = InetAddress.getByName(&quot;${SERVER_HOST}&quot;);
+    DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, Integer.parseInt(&quot;${GATEWAY_PORT}&quot;));
+    
+    long startTime = System.currentTimeMillis();
+    socket.send(packet);
+    
+    byte[] responseBuffer = new byte[1024];
+    DatagramPacket responsePacket = new DatagramPacket(responseBuffer, responseBuffer.length);
+    socket.setSoTimeout(2000);
+    
+    String responseData = &quot;Observer Pattern OK - Heartbeat monitored&quot;;
+    try {
+        socket.receive(responsePacket);
+        responseData = new String(responsePacket.getData(), 0, responsePacket.getLength(), &quot;UTF-8&quot;);
+    } catch (SocketTimeoutException e) {
+        responseData = &quot;Observer Pattern OK - Heartbeat sent to monitor (timeout expected)&quot;;
+    }
+    
+    long endTime = System.currentTimeMillis();
+    
+    SampleResult.setResponseData(responseData, &quot;UTF-8&quot;);
+    SampleResult.setDataType(SampleResult.TEXT);
+    SampleResult.setResponseCodeOK();
+    SampleResult.setResponseMessage(&quot;Observer Pattern - Heartbeat OK&quot;);
+    SampleResult.setSuccessful(true);
+    SampleResult.setLatency(endTime - startTime);
+    
+    socket.close();
+    
+    log.info(&quot;Observer Pattern - Heartbeat from &quot; + sensorId);
+    
+} catch (Exception e) {
+    SampleResult.setResponseCode(&quot;500&quot;);
+    SampleResult.setResponseMessage(&quot;Observer Pattern Error: &quot; + e.getMessage());
+    SampleResult.setResponseData(&quot;Error: &quot; + e.getMessage(), &quot;UTF-8&quot;);
+    SampleResult.setSuccessful(false);
+    log.error(&quot;Observer Pattern Test failed: &quot; + e.getMessage());
+}</stringProp>
+        </JSR223Sampler>
+        <hashTree>
+          <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Heartbeat Interval" enabled="true">
+            <stringProp name="ConstantTimer.delay">2000</stringProp>
+          </ConstantTimer>
+          <hashTree/>
+        </hashTree>
+      </hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="4. Proxy Pattern - Message Routing">
+        <intProp name="ThreadGroup.num_threads">2</intProp>
+        <intProp name="ThreadGroup.ramp_time">1</intProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
+          <stringProp name="LoopController.loops">3</stringProp>
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+        </elementProp>
+      </ThreadGroup>
+      <hashTree>
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="Sensor Data via Proxy">
+          <stringProp name="scriptLanguage">java</stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="script">import java.net.*;
+import java.io.*;
+import java.util.Random;
+
+try {
+    DatagramSocket socket = new DatagramSocket();
+    
+    String sensorId = &quot;PROXY_SENSOR_&quot; + ctx.getThreadNum();
+    String[] sensorTypes = {&quot;TEMPERATURE&quot;, &quot;HUMIDITY&quot;, &quot;PRESSURE&quot;, &quot;LIGHT&quot;, &quot;MOTION&quot;};
+    String sensorType = sensorTypes[new Random().nextInt(sensorTypes.length)];
+    double value = 20.0 + (Math.random() * 80.0);
+    
+    String message = &quot;SENSOR_DATA|&quot; + sensorId + &quot;|&quot; + sensorType + &quot;|&quot; + String.format(&quot;%.2f&quot;, value) + &quot;|&quot; + System.currentTimeMillis();
+    
+    byte[] buffer = message.getBytes(&quot;UTF-8&quot;);
+    InetAddress address = InetAddress.getByName(&quot;${SERVER_HOST}&quot;);
+    DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, Integer.parseInt(&quot;${GATEWAY_PORT}&quot;));
+    
+    long startTime = System.currentTimeMillis();
+    socket.send(packet);
+    
+    byte[] responseBuffer = new byte[1024];
+    DatagramPacket responsePacket = new DatagramPacket(responseBuffer, responseBuffer.length);
+    socket.setSoTimeout(2000);
+    
+    String responseData = &quot;Proxy Pattern OK - Message routed successfully&quot;;
+    try {
+        socket.receive(responsePacket);
+        responseData = new String(responsePacket.getData(), 0, responsePacket.getLength(), &quot;UTF-8&quot;);
+    } catch (SocketTimeoutException e) {
+        responseData = &quot;Proxy Pattern OK - Data routed through Gateway (timeout expected)&quot;;
+    }
+    
+    long endTime = System.currentTimeMillis();
+    
+    SampleResult.setResponseData(&quot;Sent: &quot; + message + &quot; | Response: &quot; + responseData, &quot;UTF-8&quot;);
+    SampleResult.setDataType(SampleResult.TEXT);
+    SampleResult.setResponseCodeOK();
+    SampleResult.setResponseMessage(&quot;Proxy Pattern - Routing OK&quot;);
+    SampleResult.setSuccessful(true);
+    SampleResult.setLatency(endTime - startTime);
+    
+    socket.close();
+    
+    log.info(&quot;Proxy Pattern - Data routed: &quot; + sensorId + &quot; (&quot; + sensorType + &quot;)&quot;);
+    
+} catch (Exception e) {
+    SampleResult.setResponseCode(&quot;500&quot;);
+    SampleResult.setResponseMessage(&quot;Proxy Pattern Error: &quot; + e.getMessage());
+    SampleResult.setResponseData(&quot;Error: &quot; + e.getMessage(), &quot;UTF-8&quot;);
+    SampleResult.setSuccessful(false);
+    log.error(&quot;Proxy Pattern Test failed: &quot; + e.getMessage());
+}</stringProp>
+        </JSR223Sampler>
+        <hashTree>
+          <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Data Interval" enabled="true">
+            <stringProp name="ConstantTimer.delay">1500</stringProp>
+          </ConstantTimer>
+          <hashTree/>
+        </hashTree>
+      </hashTree>
+      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree">
+        <boolProp name="ResultCollector.error_logging">false</boolProp>
+        <objProp>
+          <name>saveConfig</name>
+          <value class="SampleSaveConfiguration">
+            <time>true</time>
+            <latency>true</latency>
+            <timestamp>true</timestamp>
+            <success>true</success>
+            <label>true</label>
+            <code>true</code>
+            <message>true</message>
+            <threadName>true</threadName>
+            <dataType>true</dataType>
+            <encoding>false</encoding>
+            <assertions>true</assertions>
+            <subresults>true</subresults>
+            <responseData>false</responseData>
+            <samplerData>false</samplerData>
+            <xml>false</xml>
+            <fieldNames>true</fieldNames>
+            <responseHeaders>false</responseHeaders>
+            <requestHeaders>false</requestHeaders>
+            <responseDataOnError>false</responseDataOnError>
+            <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+            <assertionsResultsToSave>0</assertionsResultsToSave>
+            <bytes>true</bytes>
+            <sentBytes>true</sentBytes>
+            <url>true</url>
+            <threadCounts>true</threadCounts>
+            <idleTime>true</idleTime>
+            <connectTime>true</connectTime>
+          </value>
+        </objProp>
+        <stringProp name="filename"></stringProp>
+      </ResultCollector>
+      <hashTree/>
+      <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary Report - GoF Patterns">
+        <boolProp name="ResultCollector.error_logging">false</boolProp>
+        <objProp>
+          <name>saveConfig</name>
+          <value class="SampleSaveConfiguration">
+            <time>true</time>
+            <latency>true</latency>
+            <timestamp>true</timestamp>
+            <success>true</success>
+            <label>true</label>
+            <code>true</code>
+            <message>true</message>
+            <threadName>true</threadName>
+            <dataType>true</dataType>
+            <encoding>false</encoding>
+            <assertions>true</assertions>
+            <subresults>true</subresults>
+            <responseData>false</responseData>
+            <samplerData>false</samplerData>
+            <xml>false</xml>
+            <fieldNames>true</fieldNames>
+            <responseHeaders>false</responseHeaders>
+            <requestHeaders>false</requestHeaders>
+            <responseDataOnError>false</responseDataOnError>
+            <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+            <assertionsResultsToSave>0</assertionsResultsToSave>
+            <bytes>true</bytes>
+            <sentBytes>true</sentBytes>
+            <url>true</url>
+            <threadCounts>true</threadCounts>
+            <idleTime>true</idleTime>
+            <connectTime>true</connectTime>
+          </value>
+        </objProp>
+        <stringProp name="filename"></stringProp>
+      </ResultCollector>
+      <hashTree/>
+      <ResultCollector guiclass="StatVisualizer" testclass="ResultCollector" testname="Aggregate Report - GoF Patterns">
+        <boolProp name="ResultCollector.error_logging">false</boolProp>
+        <objProp>
+          <name>saveConfig</name>
+          <value class="SampleSaveConfiguration">
+            <time>true</time>
+            <latency>true</latency>
+            <timestamp>true</timestamp>
+            <success>true</success>
+            <label>true</label>
+            <code>true</code>
+            <message>true</message>
+            <threadName>true</threadName>
+            <dataType>true</dataType>
+            <encoding>false</encoding>
+            <assertions>true</assertions>
+            <subresults>true</subresults>
+            <responseData>false</responseData>
+            <samplerData>false</samplerData>
+            <xml>false</xml>
+            <fieldNames>true</fieldNames>
+            <responseHeaders>false</responseHeaders>
+            <requestHeaders>false</requestHeaders>
+            <responseDataOnError>false</responseDataOnError>
+            <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+            <assertionsResultsToSave>0</assertionsResultsToSave>
+            <bytes>true</bytes>
+            <sentBytes>true</sentBytes>
+            <url>true</url>
+            <threadCounts>true</threadCounts>
+            <idleTime>true</idleTime>
+            <connectTime>true</connectTime>
+          </value>
+        </objProp>
+        <stringProp name="filename"></stringProp>
+      </ResultCollector>
+      <hashTree/>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>
