@@ -1,0 +1,70 @@
+timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,bytes,sentBytes,grpThreads,allThreads,Latency
+1759017035873,15,📡 UDP - Registro Sensor,200,,🔋 Sensores UDP Reais 1-1,text,true,0,0,1,1,15
+1759017036865,1,📡 UDP - Registro Sensor,200,,🔋 Sensores UDP Reais 1-2,text,true,0,0,2,2,1
+1759017037875,1,📡 UDP - Registro Sensor,200,,🔋 Sensores UDP Reais 1-3,text,true,0,0,3,3,1
+1759017037899,0,📊 UDP - Dados Sensor,200,,🔋 Sensores UDP Reais 1-1,text,true,0,0,3,3,0
+1759017037901,1,💓 UDP - Heartbeat,200,,🔋 Sensores UDP Reais 1-1,text,true,0,0,3,3,1
+1759017037903,0,📡 UDP - Registro Sensor,200,,🔋 Sensores UDP Reais 1-1,text,true,0,0,3,3,0
+1759017038883,1,📊 UDP - Dados Sensor,200,,🔋 Sensores UDP Reais 1-2,text,true,0,0,3,3,1
+1759017038885,0,💓 UDP - Heartbeat,200,,🔋 Sensores UDP Reais 1-2,text,true,0,0,3,3,0
+1759017038886,1,📡 UDP - Registro Sensor,200,,🔋 Sensores UDP Reais 1-2,text,true,0,0,3,3,1
+1759017039890,1,📊 UDP - Dados Sensor,200,,🔋 Sensores UDP Reais 1-3,text,true,0,0,3,3,1
+1759017039892,1,💓 UDP - Heartbeat,200,,🔋 Sensores UDP Reais 1-3,text,true,0,0,3,3,1
+1759017039894,0,📡 UDP - Registro Sensor,200,,🔋 Sensores UDP Reais 1-3,text,true,0,0,3,3,0
+1759017039906,1,📊 UDP - Dados Sensor,200,,🔋 Sensores UDP Reais 1-1,text,true,0,0,3,3,1
+1759017039908,2,💓 UDP - Heartbeat,200,,🔋 Sensores UDP Reais 1-1,text,true,0,0,3,3,2
+1759017039910,1,📡 UDP - Registro Sensor,200,,🔋 Sensores UDP Reais 1-1,text,true,0,0,3,3,1
+1759017040898,1,📊 UDP - Dados Sensor,200,,🔋 Sensores UDP Reais 1-2,text,true,0,0,3,3,1
+1759017040900,1,💓 UDP - Heartbeat,200,,🔋 Sensores UDP Reais 1-2,text,true,0,0,3,3,1
+1759017040901,1,📡 UDP - Registro Sensor,200,,🔋 Sensores UDP Reais 1-2,text,true,0,0,3,3,1
+1759017041907,1,📊 UDP - Dados Sensor,200,,🔋 Sensores UDP Reais 1-3,text,true,0,0,3,3,1
+1759017041909,1,💓 UDP - Heartbeat,200,,🔋 Sensores UDP Reais 1-3,text,true,0,0,3,3,1
+1759017041911,0,📡 UDP - Registro Sensor,200,,🔋 Sensores UDP Reais 1-3,text,true,0,0,3,3,0
+1759017041923,1,📊 UDP - Dados Sensor,200,,🔋 Sensores UDP Reais 1-1,text,true,0,0,3,3,1
+1759017041925,1,💓 UDP - Heartbeat,200,,🔋 Sensores UDP Reais 1-1,text,true,0,0,3,3,1
+1759017041927,1,📡 UDP - Registro Sensor,200,,🔋 Sensores UDP Reais 1-1,text,true,0,0,3,3,1
+1759017042915,1,📊 UDP - Dados Sensor,200,,🔋 Sensores UDP Reais 1-2,text,true,0,0,3,3,1
+1759017042917,1,💓 UDP - Heartbeat,200,,🔋 Sensores UDP Reais 1-2,text,true,0,0,3,3,1
+1759017042918,1,📡 UDP - Registro Sensor,200,,🔋 Sensores UDP Reais 1-2,text,true,0,0,3,3,1
+1759017043922,0,📊 UDP - Dados Sensor,200,,🔋 Sensores UDP Reais 1-3,text,true,0,0,3,3,0
+1759017043923,1,💓 UDP - Heartbeat,200,,🔋 Sensores UDP Reais 1-3,text,true,0,0,3,3,1
+1759017043925,1,📡 UDP - Registro Sensor,200,,🔋 Sensores UDP Reais 1-3,text,true,0,0,3,3,1
+1759017043937,1,📊 UDP - Dados Sensor,200,,🔋 Sensores UDP Reais 1-1,text,true,0,0,3,3,1
+1759017043939,1,💓 UDP - Heartbeat,200,,🔋 Sensores UDP Reais 1-1,text,true,0,0,3,3,1
+1759017043941,1,📡 UDP - Registro Sensor,200,,🔋 Sensores UDP Reais 1-1,text,true,0,0,3,3,1
+1759017044927,1,📊 UDP - Dados Sensor,200,,🔋 Sensores UDP Reais 1-2,text,true,0,0,3,3,1
+1759017044929,1,💓 UDP - Heartbeat,200,,🔋 Sensores UDP Reais 1-2,text,true,0,0,3,3,1
+1759017044930,1,📡 UDP - Registro Sensor,200,,🔋 Sensores UDP Reais 1-2,text,true,0,0,3,3,1
+1759017045934,1,📊 UDP - Dados Sensor,200,,🔋 Sensores UDP Reais 1-3,text,true,0,0,3,3,1
+1759017045935,1,💓 UDP - Heartbeat,200,,🔋 Sensores UDP Reais 1-3,text,true,0,0,3,3,1
+1759017045937,1,📡 UDP - Registro Sensor,200,,🔋 Sensores UDP Reais 1-3,text,true,0,0,3,3,1
+1759017045950,1,📊 UDP - Dados Sensor,200,,🔋 Sensores UDP Reais 1-1,text,true,0,0,3,3,1
+1759017045951,1,💓 UDP - Heartbeat,200,,🔋 Sensores UDP Reais 1-1,text,true,0,0,3,3,1
+1759017045953,1,📡 UDP - Registro Sensor,200,,🔋 Sensores UDP Reais 1-1,text,true,0,0,3,3,1
+1759017046946,1,📊 UDP - Dados Sensor,200,,🔋 Sensores UDP Reais 1-2,text,true,0,0,3,3,1
+1759017046948,1,💓 UDP - Heartbeat,200,,🔋 Sensores UDP Reais 1-2,text,true,0,0,3,3,1
+1759017046949,1,📡 UDP - Registro Sensor,200,,🔋 Sensores UDP Reais 1-2,text,true,0,0,3,3,1
+1759017047939,1,📊 UDP - Dados Sensor,200,,🔋 Sensores UDP Reais 1-3,text,true,0,0,3,3,1
+1759017047940,1,💓 UDP - Heartbeat,200,,🔋 Sensores UDP Reais 1-3,text,true,0,0,3,3,1
+1759017047941,1,📡 UDP - Registro Sensor,200,,🔋 Sensores UDP Reais 1-3,text,true,0,0,3,3,1
+1759017047955,1,📊 UDP - Dados Sensor,200,,🔋 Sensores UDP Reais 1-1,text,true,0,0,3,3,1
+1759017047956,2,💓 UDP - Heartbeat,200,,🔋 Sensores UDP Reais 1-1,text,true,0,0,3,3,2
+1759017047958,1,📡 UDP - Registro Sensor,200,,🔋 Sensores UDP Reais 1-1,text,true,0,0,3,3,1
+1759017048964,1,📊 UDP - Dados Sensor,200,,🔋 Sensores UDP Reais 1-2,text,true,0,0,3,3,1
+1759017048965,1,💓 UDP - Heartbeat,200,,🔋 Sensores UDP Reais 1-2,text,true,0,0,3,3,1
+1759017048967,1,📡 UDP - Registro Sensor,200,,🔋 Sensores UDP Reais 1-2,text,true,0,0,3,3,1
+1759017049952,1,📊 UDP - Dados Sensor,200,,🔋 Sensores UDP Reais 1-3,text,true,0,0,3,3,1
+1759017049953,1,💓 UDP - Heartbeat,200,,🔋 Sensores UDP Reais 1-3,text,true,0,0,3,3,1
+1759017049955,0,📡 UDP - Registro Sensor,200,,🔋 Sensores UDP Reais 1-3,text,true,0,0,3,3,0
+1759017049967,1,📊 UDP - Dados Sensor,200,,🔋 Sensores UDP Reais 1-1,text,true,0,0,3,3,1
+1759017049969,1,💓 UDP - Heartbeat,200,,🔋 Sensores UDP Reais 1-1,text,true,0,0,3,3,1
+1759017049970,1,📡 UDP - Registro Sensor,200,,🔋 Sensores UDP Reais 1-1,text,true,0,0,3,3,1
+1759017050975,1,📊 UDP - Dados Sensor,200,,🔋 Sensores UDP Reais 1-2,text,true,0,0,3,3,1
+1759017050977,1,💓 UDP - Heartbeat,200,,🔋 Sensores UDP Reais 1-2,text,true,0,0,3,3,1
+1759017050979,1,📡 UDP - Registro Sensor,200,,🔋 Sensores UDP Reais 1-2,text,true,0,0,3,3,1
+1759017051960,1,📊 UDP - Dados Sensor,200,,🔋 Sensores UDP Reais 1-3,text,true,0,0,3,3,1
+1759017051962,0,💓 UDP - Heartbeat,200,,🔋 Sensores UDP Reais 1-3,text,true,0,0,3,3,0
+1759017051963,1,📡 UDP - Registro Sensor,200,,🔋 Sensores UDP Reais 1-3,text,true,0,0,3,3,1
+1759017051976,1,📊 UDP - Dados Sensor,200,,🔋 Sensores UDP Reais 1-1,text,true,0,0,3,3,1
+1759017051978,1,💓 UDP - Heartbeat,200,,🔋 Sensores UDP Reais 1-1,text,true,0,0,3,3,1
+1759017051979,1,📡 UDP - Registro Sensor,200,,🔋 Sensores UDP Reais 1-1,text,true,0,0,3,3,1

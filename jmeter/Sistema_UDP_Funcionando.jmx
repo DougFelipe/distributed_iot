@@ -33,6 +33,8 @@
         <stringProp name="TestPlan.comments">3 sensores, 10 loops = 30 mensagens UDP</stringProp>
         <intProp name="ThreadGroup.num_threads">3</intProp>
         <intProp name="ThreadGroup.ramp_time">3</intProp>
+        <longProp name="ThreadGroup.duration">120</longProp>
+        <longProp name="ThreadGroup.delay">0</longProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
@@ -41,60 +43,150 @@
         </elementProp>
       </ThreadGroup>
       <hashTree>
-        <kg.apc.jmeter.samplers.UDPSampler guiclass="kg.apc.jmeter.samplers.UDPSamplerGui" testclass="kg.apc.jmeter.samplers.UDPSampler" testname="📡 UDP - Registro Sensor">
+        <kg.apc.jmeter.samplers.UDPSampler guiclass="kg.apc.jmeter.samplers.UDPSamplerGui" testclass="kg.apc.jmeter.samplers.UDPSampler" testname="📡 UDP - Registro Sensor" enabled="true">
           <stringProp name="hostname">localhost</stringProp>
           <stringProp name="port">9090</stringProp>
           <stringProp name="data">SENSOR_REGISTER|TEMP_SENSOR_${__threadNum}|TEMPERATURE|Lab-${__threadNum}|${__time()}|0.0</stringProp>
-          <stringProp name="encodeclass"></stringProp>
-          <stringProp name="timeout">3000</stringProp>
+          <stringProp name="timeout">5000</stringProp>
           <boolProp name="waitresponse">false</boolProp>
-          <boolProp name="closechannel">false</boolProp>
-          <stringProp name="bind_address"></stringProp>
-          <stringProp name="bind_port"></stringProp>
+          <boolProp name="closechannel">true</boolProp>
+          <stringProp name="bind_address">0.0.0.0</stringProp>
+          <stringProp name="bind_port">0</stringProp>
           <stringProp name="TestPlan.comments">Registro do sensor via UDP real</stringProp>
+          <stringProp name="encodeclass"></stringProp>
         </kg.apc.jmeter.samplers.UDPSampler>
         <hashTree>
-          <OnceOnlyController guiclass="OnceOnlyControllerGui" testclass="OnceOnlyController" testname="Registro Uma Vez"/>
+          <OnceOnlyController guiclass="OnceOnlyControllerGui" testclass="OnceOnlyController" testname="Registro Uma Vez" enabled="true"/>
           <hashTree/>
         </hashTree>
-        <kg.apc.jmeter.samplers.UDPSampler guiclass="kg.apc.jmeter.samplers.UDPSamplerGui" testclass="kg.apc.jmeter.samplers.UDPSampler" testname="📊 UDP - Dados Sensor">
+        <kg.apc.jmeter.samplers.UDPSampler guiclass="kg.apc.jmeter.samplers.UDPSamplerGui" testclass="kg.apc.jmeter.samplers.UDPSampler" testname="📊 UDP - Dados Sensor" enabled="true">
           <stringProp name="hostname">localhost</stringProp>
           <stringProp name="port">9090</stringProp>
-          <stringProp name="data">SENSOR_DATA|TEMP_SENSOR_${__threadNum}|TEMPERATURE|${__time()}|${__Random(15,35)}.${__Random(0,99)}</stringProp>
-          <stringProp name="encodeclass"></stringProp>
-          <stringProp name="timeout">3000</stringProp>
+          <stringProp name="data">SENSOR_DATA|TEMP_SENSOR_${__threadNum}|${__Random(15,35)}.${__Random(0,9)}|°C|${__time()}</stringProp>
+          <stringProp name="timeout">5000</stringProp>
           <boolProp name="waitresponse">false</boolProp>
-          <boolProp name="closechannel">false</boolProp>
-          <stringProp name="bind_address"></stringProp>
-          <stringProp name="bind_port"></stringProp>
+          <boolProp name="closechannel">true</boolProp>
+          <stringProp name="bind_address">0.0.0.0</stringProp>
+          <stringProp name="bind_port">0</stringProp>
           <stringProp name="TestPlan.comments">Dados de temperatura via UDP real</stringProp>
+          <stringProp name="encodeclass"></stringProp>
         </kg.apc.jmeter.samplers.UDPSampler>
         <hashTree>
-          <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="⏱️ Timer Dados (2s)">
+          <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="⏱️ Timer Dados (2s)" enabled="true">
             <stringProp name="ConstantTimer.delay">2000</stringProp>
           </ConstantTimer>
           <hashTree/>
         </hashTree>
-        <kg.apc.jmeter.samplers.UDPSampler guiclass="kg.apc.jmeter.samplers.UDPSamplerGui" testclass="kg.apc.jmeter.samplers.UDPSampler" testname="💓 UDP - Heartbeat">
+        <kg.apc.jmeter.samplers.UDPSampler guiclass="kg.apc.jmeter.samplers.UDPSamplerGui" testclass="kg.apc.jmeter.samplers.UDPSampler" testname="💓 UDP - Heartbeat" enabled="true">
           <stringProp name="hostname">localhost</stringProp>
           <stringProp name="port">9090</stringProp>
-          <stringProp name="data">HEARTBEAT|TEMP_SENSOR_${__threadNum}|TEMPERATURE|${__time()}|ALIVE</stringProp>
-          <stringProp name="encodeclass"></stringProp>
-          <stringProp name="timeout">3000</stringProp>
+          <stringProp name="data">HEARTBEAT|TEMP_SENSOR_${__threadNum}|${__time()}|ACTIVE</stringProp>
+          <stringProp name="timeout">5000</stringProp>
           <boolProp name="waitresponse">false</boolProp>
-          <boolProp name="closechannel">false</boolProp>
-          <stringProp name="bind_address"></stringProp>
-          <stringProp name="bind_port"></stringProp>
+          <boolProp name="closechannel">true</boolProp>
+          <stringProp name="bind_address">0.0.0.0</stringProp>
+          <stringProp name="bind_port">0</stringProp>
           <stringProp name="TestPlan.comments">Heartbeat via UDP real</stringProp>
+          <stringProp name="encodeclass"></stringProp>
         </kg.apc.jmeter.samplers.UDPSampler>
         <hashTree>
-          <IfController guiclass="IfControllerPanel" testclass="IfController" testname="Heartbeat Condicional">
+          <IfController guiclass="IfControllerPanel" testclass="IfController" testname="Heartbeat Condicional" enabled="true">
             <stringProp name="IfController.condition">${__jexl3(${__counter(FALSE,)} % 3 == 0)}</stringProp>
             <boolProp name="IfController.evaluateAll">false</boolProp>
             <boolProp name="IfController.useExpression">true</boolProp>
           </IfController>
           <hashTree/>
         </hashTree>
+        <kg.apc.jmeter.vizualizers.CorrectedResultCollector guiclass="kg.apc.jmeter.vizualizers.TransactionsPerSecondGui" testclass="kg.apc.jmeter.vizualizers.CorrectedResultCollector" testname="jp@gc - Transactions per Second" enabled="true">
+          <boolProp name="ResultCollector.error_logging">false</boolProp>
+          <objProp>
+            <name>saveConfig</name>
+            <value class="SampleSaveConfiguration">
+              <time>true</time>
+              <latency>true</latency>
+              <timestamp>true</timestamp>
+              <success>true</success>
+              <label>true</label>
+              <code>true</code>
+              <message>true</message>
+              <threadName>true</threadName>
+              <dataType>true</dataType>
+              <encoding>false</encoding>
+              <assertions>true</assertions>
+              <subresults>true</subresults>
+              <responseData>false</responseData>
+              <samplerData>false</samplerData>
+              <xml>false</xml>
+              <fieldNames>true</fieldNames>
+              <responseHeaders>false</responseHeaders>
+              <requestHeaders>false</requestHeaders>
+              <responseDataOnError>false</responseDataOnError>
+              <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+              <assertionsResultsToSave>0</assertionsResultsToSave>
+              <bytes>true</bytes>
+              <sentBytes>true</sentBytes>
+              <url>true</url>
+              <threadCounts>true</threadCounts>
+              <idleTime>true</idleTime>
+              <connectTime>true</connectTime>
+            </value>
+          </objProp>
+          <stringProp name="filename"></stringProp>
+          <longProp name="interval_grouping">1000</longProp>
+          <boolProp name="graph_aggregated">false</boolProp>
+          <stringProp name="include_sample_labels"></stringProp>
+          <stringProp name="exclude_sample_labels"></stringProp>
+          <stringProp name="start_offset"></stringProp>
+          <stringProp name="end_offset"></stringProp>
+          <boolProp name="include_checkbox_state">false</boolProp>
+          <boolProp name="exclude_checkbox_state">false</boolProp>
+        </kg.apc.jmeter.vizualizers.CorrectedResultCollector>
+        <hashTree/>
+        <kg.apc.jmeter.vizualizers.CorrectedResultCollector guiclass="kg.apc.jmeter.vizualizers.ResponseTimesOverTimeGui" testclass="kg.apc.jmeter.vizualizers.CorrectedResultCollector" testname="jp@gc - Response Times Over Time" enabled="true">
+          <boolProp name="ResultCollector.error_logging">false</boolProp>
+          <objProp>
+            <name>saveConfig</name>
+            <value class="SampleSaveConfiguration">
+              <time>true</time>
+              <latency>true</latency>
+              <timestamp>true</timestamp>
+              <success>true</success>
+              <label>true</label>
+              <code>true</code>
+              <message>true</message>
+              <threadName>true</threadName>
+              <dataType>true</dataType>
+              <encoding>false</encoding>
+              <assertions>true</assertions>
+              <subresults>true</subresults>
+              <responseData>false</responseData>
+              <samplerData>false</samplerData>
+              <xml>false</xml>
+              <fieldNames>true</fieldNames>
+              <responseHeaders>false</responseHeaders>
+              <requestHeaders>false</requestHeaders>
+              <responseDataOnError>false</responseDataOnError>
+              <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+              <assertionsResultsToSave>0</assertionsResultsToSave>
+              <bytes>true</bytes>
+              <sentBytes>true</sentBytes>
+              <url>true</url>
+              <threadCounts>true</threadCounts>
+              <idleTime>true</idleTime>
+              <connectTime>true</connectTime>
+            </value>
+          </objProp>
+          <stringProp name="filename"></stringProp>
+          <longProp name="interval_grouping">500</longProp>
+          <boolProp name="graph_aggregated">false</boolProp>
+          <stringProp name="include_sample_labels"></stringProp>
+          <stringProp name="exclude_sample_labels"></stringProp>
+          <stringProp name="start_offset"></stringProp>
+          <stringProp name="end_offset"></stringProp>
+          <boolProp name="include_checkbox_state">false</boolProp>
+          <boolProp name="exclude_checkbox_state">false</boolProp>
+        </kg.apc.jmeter.vizualizers.CorrectedResultCollector>
+        <hashTree/>
       </hashTree>
       <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="📋 UDP Summary">
         <boolProp name="ResultCollector.error_logging">false</boolProp>
@@ -130,7 +222,7 @@
             <connectTime>true</connectTime>
           </value>
         </objProp>
-        <stringProp name="filename">results/udp_summary.jtl</stringProp>
+        <stringProp name="filename">d:\distribuida\jmeter\results\udp_summary.jtl</stringProp>
       </ResultCollector>
       <hashTree/>
       <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="🌳 UDP Details">
@@ -164,7 +256,7 @@
             <threadCounts>true</threadCounts>
           </value>
         </objProp>
-        <stringProp name="filename">results/udp_details.jtl</stringProp>
+        <stringProp name="filename">d:\distribuida\jmeter\results\udp_details.jtl</stringProp>
       </ResultCollector>
       <hashTree/>
     </hashTree>
