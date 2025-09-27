@@ -76,6 +76,8 @@ public class IoTMessage implements Serializable {
     // Getters
     public String getMessageId() { return messageId; }
     public String getSensorId() { return sensorId; }
+    public String getSenderId() { return sensorId; } // Alias para compatibilidade
+    public String getClientId() { return sensorId; } // Alias para compatibilidade
     public MessageType getType() { return type; }
     public String getContent() { return content; }
     public LocalDateTime getTimestamp() { return timestamp; }
