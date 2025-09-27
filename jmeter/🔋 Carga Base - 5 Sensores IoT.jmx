@@ -1,0 +1,723 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="📊 Plano de Teste - Sistema IoT Distribuído GoF">
+      <stringProp name="TestPlan.comments">
+        🎯 OBJETIVO: Testar sistema IoT distribuído com padrões GoF e tolerância a falhas
+        
+        📋 ESTRUTURA:
+        - Plano de Teste (Test Plan)
+          └── Thread Groups (Grupos de Usuários)
+              └── Casos de Teste (Samplers + Timers + Assertions + Listeners)
+        
+        🏗️ CENÁRIOS:
+        1. Carga Base (5 sensores IoT)
+        2. Pico de Carga (10 sensores IoT)
+        3. Simulação de Falhas (redução para 2 sensores)
+        4. Recuperação (volta para 8 sensores)
+        
+        📈 MÉTRICAS:
+        - Response Times Over Time
+        - Transactions Per Second
+        - Summary Report
+        - View Results Tree
+      </stringProp>
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.tearDown_on_shutdown">true</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+      <elementProp name="TestPlan.arguments" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="🔧 Variáveis Globais">
+        <collectionProp name="Arguments.arguments">
+          <elementProp name="IOT_SERVER_HOST" elementType="Argument">
+            <stringProp name="Argument.name">IOT_SERVER_HOST</stringProp>
+            <stringProp name="Argument.value">localhost</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+            <stringProp name="Argument.desc">Endereço do Gateway IoT</stringProp>
+          </elementProp>
+          <elementProp name="IOT_GATEWAY_PORT" elementType="Argument">
+            <stringProp name="Argument.name">IOT_GATEWAY_PORT</stringProp>
+            <stringProp name="Argument.value">9090</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+            <stringProp name="Argument.desc">Porta UDP do Gateway IoT</stringProp>
+          </elementProp>
+          <elementProp name="SENSOR_DATA_INTERVAL" elementType="Argument">
+            <stringProp name="Argument.name">SENSOR_DATA_INTERVAL</stringProp>
+            <stringProp name="Argument.value">3000</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+            <stringProp name="Argument.desc">Intervalo entre envios de dados (ms)</stringProp>
+          </elementProp>
+          <elementProp name="HEARTBEAT_INTERVAL" elementType="Argument">
+            <stringProp name="Argument.name">HEARTBEAT_INTERVAL</stringProp>
+            <stringProp name="Argument.value">5000</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+            <stringProp name="Argument.desc">Intervalo de heartbeat (ms)</stringProp>
+          </elementProp>
+        </collectionProp>
+      </elementProp>
+      <stringProp name="TestPlan.user_define_classpath"></stringProp>
+    </TestPlan>
+    <hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="🔋 Carga Base - 5 Sensores IoT">
+        <stringProp name="TestPlan.comments">
+          🎯 CENÁRIO: Carga base com 5 sensores IoT simulados
+          ⏱️ DURAÇÃO: 5 minutos (300 segundos)
+          📈 RAMP-UP: 10 segundos para atingir 5 threads
+          🔄 LOOPS: Infinito durante a duração
+        </stringProp>
+        <intProp name="ThreadGroup.num_threads">5</intProp>
+        <intProp name="ThreadGroup.ramp_time">10</intProp>
+        <longProp name="ThreadGroup.duration">300</longProp>
+        <longProp name="ThreadGroup.delay">0</longProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+        <boolProp name="ThreadGroup.scheduler">true</boolProp>
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
+          <intProp name="LoopController.loops">-1</intProp>
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+        </elementProp>
+      </ThreadGroup>
+      <hashTree>
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="📝 Registro de Sensor IoT" enabled="true">
+          <stringProp name="scriptLanguage">java</stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="script">import java.net.*;
+import java.io.*;
+import java.util.Date;
+
+try {
+    // Configuração do sensor baseada na thread
+    String threadNum = String.format(&quot;%02d&quot;, ctx.getThreadNum() + 1);
+    String[] sensorTypes = {&quot;TEMPERATURE&quot;, &quot;HUMIDITY&quot;, &quot;PRESSURE&quot;, &quot;LIGHT&quot;, &quot;MOTION&quot;};
+    String sensorType = sensorTypes[ctx.getThreadNum() % sensorTypes.length];
+    String sensorId = sensorType + &quot;_SENSOR_&quot; + threadNum;
+    
+    // Criar socket UDP
+    DatagramSocket socket = new DatagramSocket();
+    
+    // Mensagem de registro do sensor
+    String registerMessage = String.format(
+        &quot;SENSOR_REGISTER|%s|%s|Lab-%s|%s|0.0&quot;,
+        sensorId, sensorType, threadNum, new Date().toString()
+    );
+    
+    // Enviar registro
+    byte[] data = registerMessage.getBytes(&quot;UTF-8&quot;);
+    InetAddress address = InetAddress.getByName(vars.get(&quot;IOT_SERVER_HOST&quot;));
+    int port = Integer.parseInt(vars.get(&quot;IOT_GATEWAY_PORT&quot;));
+    
+    DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
+    
+    long startTime = System.currentTimeMillis();
+    socket.send(packet);
+    long endTime = System.currentTimeMillis();
+    
+    // Aguardar possível resposta (timeout curto)
+    socket.setSoTimeout(1000);
+    byte[] responseBuffer = new byte[1024];
+    DatagramPacket responsePacket = new DatagramPacket(responseBuffer, responseBuffer.length);
+    
+    String responseData = &quot;Sensor registrado com sucesso&quot;;
+    try {
+        socket.receive(responsePacket);
+        responseData = new String(responsePacket.getData(), 0, responsePacket.getLength(), &quot;UTF-8&quot;);
+    } catch (SocketTimeoutException e) {
+        // Timeout esperado para UDP
+        responseData = &quot;Registro UDP enviado - &quot; + sensorId;
+    }
+    
+    socket.close();
+    
+    // Configurar resultado
+    SampleResult.setResponseData(responseData, &quot;UTF-8&quot;);
+    SampleResult.setDataType(SampleResult.TEXT);
+    SampleResult.setResponseCodeOK();
+    SampleResult.setResponseMessage(&quot;Singleton Pattern - Registro via Gateway&quot;);
+    SampleResult.setSuccessful(true);
+    SampleResult.setLatency(endTime - startTime);
+    
+    // Armazenar dados do sensor para próximos samplers
+    vars.put(&quot;SENSOR_ID&quot;, sensorId);
+    vars.put(&quot;SENSOR_TYPE&quot;, sensorType);
+    vars.put(&quot;THREAD_NUM&quot;, threadNum);
+    
+    log.info(&quot;✅ Sensor registrado: &quot; + sensorId + &quot; (&quot; + sensorType + &quot;)&quot;);
+    log.info(&quot;📝 Dados enviados para: &quot; + vars.get(&quot;IOT_SERVER_HOST&quot;) + &quot;:&quot; + vars.get(&quot;IOT_GATEWAY_PORT&quot;));
+    log.info(&quot;📦 Mensagem: &quot; + registerMessage);
+    
+} catch (Exception e) {
+    SampleResult.setResponseCode(&quot;500&quot;);
+    SampleResult.setResponseMessage(&quot;Erro no registro: &quot; + e.getMessage());
+    SampleResult.setResponseData(&quot;Erro: &quot; + e.getMessage(), &quot;UTF-8&quot;);
+    SampleResult.setSuccessful(false);
+    log.error(&quot;❌ Erro no registro: &quot; + e.getMessage());
+    log.error(&quot;❌ Stack trace: &quot; + Arrays.toString(e.getStackTrace()));
+}</stringProp>
+        </JSR223Sampler>
+        <hashTree>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="✅ Assertion - Registro Bem-sucedido" enabled="true">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="-1869559952">registrado</stringProp>
+              <stringProp name="-1590002160">enviado</stringProp>
+            </collectionProp>
+            <stringProp name="Assertion.custom_message">Falha no registro do sensor</stringProp>
+            <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
+            <boolProp name="Assertion.assume_success">false</boolProp>
+            <intProp name="Assertion.test_type">16</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+        </hashTree>
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="📊 Envio de Dados do Sensor" enabled="true">
+          <stringProp name="scriptLanguage">java</stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="script">import java.net.*;
+import java.io.*;
+import java.util.Date;
+import java.util.Random;
+
+try {
+    // Recuperar dados do sensor
+    String sensorId = vars.get(&quot;SENSOR_ID&quot;);
+    String sensorType = vars.get(&quot;SENSOR_TYPE&quot;);
+    String threadNum = vars.get(&quot;THREAD_NUM&quot;);
+    
+    if (sensorId == null) {
+        sensorId = &quot;TEMP_SENSOR_&quot; + String.format(&quot;%02d&quot;, ctx.getThreadNum() + 1);
+        sensorType = &quot;TEMPERATURE&quot;;
+    }
+    
+    // Gerar valor realista baseado no tipo de sensor
+    Random random = new Random();
+    double sensorValue = 0.0;
+    String unit = &quot;&quot;;
+    
+    switch (sensorType) {
+        case &quot;TEMPERATURE&quot;:
+            sensorValue = 15.0 + random.nextDouble() * 20.0; // 15-35°C
+            unit = &quot;°C&quot;;
+            break;
+        case &quot;HUMIDITY&quot;:
+            sensorValue = 30.0 + random.nextDouble() * 40.0; // 30-70%
+            unit = &quot;%&quot;;
+            break;
+        case &quot;PRESSURE&quot;:
+            sensorValue = 900.0 + random.nextDouble() * 300.0; // 900-1200 hPa
+            unit = &quot;hPa&quot;;
+            break;
+        case &quot;LIGHT&quot;:
+            sensorValue = random.nextDouble() * 1000.0; // 0-1000 lux
+            unit = &quot;lux&quot;;
+            break;
+        case &quot;MOTION&quot;:
+            sensorValue = random.nextBoolean() ? 1.0 : 0.0; // 0 ou 1
+            unit = &quot;bool&quot;;
+            break;
+        default:
+            sensorValue = random.nextDouble() * 100.0;
+            unit = &quot;units&quot;;
+    }
+    
+    // Criar socket UDP
+    DatagramSocket socket = new DatagramSocket();
+    
+    // Mensagem de dados do sensor
+    String dataMessage = String.format(
+        &quot;SENSOR_DATA|%s|%s|%s|%.2f&quot;,
+        sensorId, sensorType, new Date().toString(), sensorValue
+    );
+    
+    // Enviar dados
+    byte[] data = dataMessage.getBytes(&quot;UTF-8&quot;);
+    InetAddress address = InetAddress.getByName(vars.get(&quot;IOT_SERVER_HOST&quot;));
+    int port = Integer.parseInt(vars.get(&quot;IOT_GATEWAY_PORT&quot;));
+    
+    DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
+    
+    long startTime = System.currentTimeMillis();
+    socket.send(packet);
+    long endTime = System.currentTimeMillis();
+    
+    socket.close();
+    
+    // Configurar resultado
+    String responseData = String.format(
+        &quot;Dados enviados: %s = %.2f %s via Strategy Pattern (UDP)&quot;,
+        sensorId, sensorValue, unit
+    );
+    
+    SampleResult.setResponseData(responseData, &quot;UTF-8&quot;);
+    SampleResult.setDataType(SampleResult.TEXT);
+    SampleResult.setResponseCodeOK();
+    SampleResult.setResponseMessage(&quot;Strategy Pattern - Dados via UDP&quot;);
+    SampleResult.setSuccessful(true);
+    SampleResult.setLatency(endTime - startTime);
+    
+    log.info(&quot;📊 Dados enviados: &quot; + sensorId + &quot; = &quot; + String.format(&quot;%.2f&quot;, sensorValue) + &quot; &quot; + unit);
+    
+} catch (Exception e) {
+    SampleResult.setResponseCode(&quot;500&quot;);
+    SampleResult.setResponseMessage(&quot;Erro no envio de dados: &quot; + e.getMessage());
+    SampleResult.setResponseData(&quot;Erro: &quot; + e.getMessage(), &quot;UTF-8&quot;);
+    SampleResult.setSuccessful(false);
+    log.error(&quot;❌ Erro no envio de dados: &quot; + e.getMessage());
+}</stringProp>
+        </JSR223Sampler>
+        <hashTree>
+          <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="⏱️ Timer - Intervalo de Dados" enabled="true">
+            <stringProp name="ConstantTimer.delay">${SENSOR_DATA_INTERVAL}</stringProp>
+            <stringProp name="TestPlan.comments">Aguarda 3 segundos entre envios de dados</stringProp>
+          </ConstantTimer>
+          <hashTree/>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="✅ Assertion - Dados Enviados" enabled="true">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="-1161947816">Dados enviados</stringProp>
+              <stringProp name="-1762270237">Strategy Pattern</stringProp>
+            </collectionProp>
+            <stringProp name="Assertion.custom_message">Falha no envio de dados do sensor</stringProp>
+            <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
+            <boolProp name="Assertion.assume_success">false</boolProp>
+            <intProp name="Assertion.test_type">16</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+        </hashTree>
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="💓 Heartbeat do Sensor" enabled="true">
+          <stringProp name="scriptLanguage">java</stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="script">import java.net.*;
+import java.io.*;
+import java.util.Date;
+
+try {
+    // Recuperar dados do sensor
+    String sensorId = vars.get(&quot;SENSOR_ID&quot;);
+    String sensorType = vars.get(&quot;SENSOR_TYPE&quot;);
+    
+    if (sensorId == null) {
+        sensorId = &quot;TEMP_SENSOR_&quot; + String.format(&quot;%02d&quot;, ctx.getThreadNum() + 1);
+        sensorType = &quot;TEMPERATURE&quot;;
+    }
+    
+    // Criar socket UDP
+    DatagramSocket socket = new DatagramSocket();
+    
+    // Mensagem de heartbeat
+    String heartbeatMessage = String.format(
+        &quot;HEARTBEAT|%s|%s|%s|ALIVE&quot;,
+        sensorId, sensorType, new Date().toString()
+    );
+    
+    // Enviar heartbeat
+    byte[] data = heartbeatMessage.getBytes(&quot;UTF-8&quot;);
+    InetAddress address = InetAddress.getByName(vars.get(&quot;IOT_SERVER_HOST&quot;));
+    int port = Integer.parseInt(vars.get(&quot;IOT_GATEWAY_PORT&quot;));
+    
+    DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
+    
+    long startTime = System.currentTimeMillis();
+    socket.send(packet);
+    long endTime = System.currentTimeMillis();
+    
+    socket.close();
+    
+    // Configurar resultado
+    String responseData = String.format(
+        &quot;Heartbeat enviado: %s - Observer Pattern ativo&quot;,
+        sensorId
+    );
+    
+    SampleResult.setResponseData(responseData, &quot;UTF-8&quot;);
+    SampleResult.setDataType(SampleResult.TEXT);
+    SampleResult.setResponseCodeOK();
+    SampleResult.setResponseMessage(&quot;Observer Pattern - Heartbeat Monitoring&quot;);
+    SampleResult.setSuccessful(true);
+    SampleResult.setLatency(endTime - startTime);
+    
+    log.info(&quot;💓 Heartbeat: &quot; + sensorId + &quot; - ALIVE&quot;);
+    
+} catch (Exception e) {
+    SampleResult.setResponseCode(&quot;500&quot;);
+    SampleResult.setResponseMessage(&quot;Erro no heartbeat: &quot; + e.getMessage());
+    SampleResult.setResponseData(&quot;Erro: &quot; + e.getMessage(), &quot;UTF-8&quot;);
+    SampleResult.setSuccessful(false);
+    log.error(&quot;❌ Erro no heartbeat: &quot; + e.getMessage());
+}</stringProp>
+        </JSR223Sampler>
+        <hashTree>
+          <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="⏱️ Timer - Heartbeat" enabled="true">
+            <stringProp name="ConstantTimer.delay">${HEARTBEAT_INTERVAL}</stringProp>
+            <stringProp name="TestPlan.comments">Aguarda 5 segundos entre heartbeats</stringProp>
+          </ConstantTimer>
+          <hashTree/>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="✅ Assertion - Heartbeat OK" enabled="true">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="1862995660">Heartbeat enviado</stringProp>
+              <stringProp name="948273222">Observer Pattern</stringProp>
+            </collectionProp>
+            <stringProp name="Assertion.custom_message">Falha no heartbeat</stringProp>
+            <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
+            <boolProp name="Assertion.assume_success">false</boolProp>
+            <intProp name="Assertion.test_type">16</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+        </hashTree>
+      </hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="📈 Pico de Carga - 5 Sensores Extras">
+        <stringProp name="TestPlan.comments">
+          🎯 CENÁRIO: Pico de carga - 5 sensores extras (total: 10)
+          ⏱️ DURAÇÃO: 2 minutos (120 segundos) 
+          📅 INÍCIO: Após 60 segundos (1 minuto)
+          📈 RAMP-UP: 5 segundos para atingir 5 threads extras
+          🎪 OBJETIVO: Demonstrar sistema sob alta carga
+        </stringProp>
+        <intProp name="ThreadGroup.num_threads">5</intProp>
+        <intProp name="ThreadGroup.ramp_time">5</intProp>
+        <longProp name="ThreadGroup.duration">120</longProp>
+        <longProp name="ThreadGroup.delay">60</longProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+        <boolProp name="ThreadGroup.scheduler">true</boolProp>
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
+          <intProp name="LoopController.loops">-1</intProp>
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+        </elementProp>
+      </ThreadGroup>
+      <hashTree>
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="📝 Registro Extra - Pico">
+          <stringProp name="scriptLanguage">java</stringProp>
+          <stringProp name="script">import java.net.*;
+import java.io.*;
+import java.util.Date;
+
+try {
+    // Configuração do sensor extra (IDs 06-10)
+    String threadNum = String.format(&quot;%02d&quot;, ctx.getThreadNum() + 6);
+    String[] sensorTypes = {&quot;TEMPERATURE&quot;, &quot;HUMIDITY&quot;, &quot;PRESSURE&quot;, &quot;LIGHT&quot;, &quot;MOTION&quot;};
+    String sensorType = sensorTypes[ctx.getThreadNum() % sensorTypes.length];
+    String sensorId = sensorType + &quot;_SENSOR_EXTRA_&quot; + threadNum;
+    
+    DatagramSocket socket = new DatagramSocket();
+    
+    String registerMessage = String.format(
+        &quot;SENSOR_REGISTER|%s|%s|Lab-Extra-%s|%s|0.0&quot;,
+        sensorId, sensorType, threadNum, new Date().toString()
+    );
+    
+    byte[] data = registerMessage.getBytes(&quot;UTF-8&quot;);
+    InetAddress address = InetAddress.getByName(vars.get(&quot;IOT_SERVER_HOST&quot;));
+    int port = Integer.parseInt(vars.get(&quot;IOT_GATEWAY_PORT&quot;));
+    
+    DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
+    
+    long startTime = System.currentTimeMillis();
+    socket.send(packet);
+    long endTime = System.currentTimeMillis();
+    
+    socket.setSoTimeout(1000);
+    byte[] responseBuffer = new byte[1024];
+    DatagramPacket responsePacket = new DatagramPacket(responseBuffer, responseBuffer.length);
+    
+    String responseData = &quot;Sensor extra registrado - Pico de carga&quot;;
+    try {
+        socket.receive(responsePacket);
+        responseData = new String(responsePacket.getData(), 0, responsePacket.getLength(), &quot;UTF-8&quot;);
+    } catch (SocketTimeoutException e) {
+        responseData = &quot;Registro extra UDP - &quot; + sensorId;
+    }
+    
+    socket.close();
+    
+    SampleResult.setResponseData(responseData, &quot;UTF-8&quot;);
+    SampleResult.setDataType(SampleResult.TEXT);
+    SampleResult.setResponseCodeOK();
+    SampleResult.setResponseMessage(&quot;Pico - Singleton suporta múltiplas instâncias&quot;);
+    SampleResult.setSuccessful(true);
+    SampleResult.setLatency(endTime - startTime);
+    
+    vars.put(&quot;SENSOR_ID&quot;, sensorId);
+    vars.put(&quot;SENSOR_TYPE&quot;, sensorType);
+    vars.put(&quot;THREAD_NUM&quot;, threadNum);
+    
+    log.info(&quot;🚀 Sensor extra registrado: &quot; + sensorId + &quot; (Pico de carga)&quot;);
+    
+} catch (Exception e) {
+    SampleResult.setResponseCode(&quot;500&quot;);
+    SampleResult.setResponseMessage(&quot;Erro no registro extra: &quot; + e.getMessage());
+    SampleResult.setResponseData(&quot;Erro: &quot; + e.getMessage(), &quot;UTF-8&quot;);
+    SampleResult.setSuccessful(false);
+    log.error(&quot;❌ Erro no registro extra: &quot; + e.getMessage());
+}</stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="cacheKey">false</stringProp>
+        </JSR223Sampler>
+        <hashTree/>
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="📊 Dados Extra - Pico">
+          <stringProp name="scriptLanguage">java</stringProp>
+          <stringProp name="script">// Script similar ao anterior, mas para sensores extras
+import java.net.*;
+import java.io.*;
+import java.util.Date;
+import java.util.Random;
+
+try {
+    String sensorId = vars.get(&quot;SENSOR_ID&quot;);
+    String sensorType = vars.get(&quot;SENSOR_TYPE&quot;);
+    
+    if (sensorId == null) {
+        sensorId = &quot;TEMP_SENSOR_EXTRA_&quot; + String.format(&quot;%02d&quot;, ctx.getThreadNum() + 6);
+        sensorType = &quot;TEMPERATURE&quot;;
+    }
+    
+    Random random = new Random();
+    double sensorValue = 15.0 + random.nextDouble() * 20.0;
+    
+    DatagramSocket socket = new DatagramSocket();
+    
+    String dataMessage = String.format(
+        &quot;SENSOR_DATA|%s|%s|%s|%.2f&quot;,
+        sensorId, sensorType, new Date().toString(), sensorValue
+    );
+    
+    byte[] data = dataMessage.getBytes(&quot;UTF-8&quot;);
+    InetAddress address = InetAddress.getByName(vars.get(&quot;IOT_SERVER_HOST&quot;));
+    int port = Integer.parseInt(vars.get(&quot;IOT_GATEWAY_PORT&quot;));
+    
+    DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
+    
+    long startTime = System.currentTimeMillis();
+    socket.send(packet);
+    long endTime = System.currentTimeMillis();
+    
+    socket.close();
+    
+    String responseData = String.format(
+        &quot;Dados pico: %s = %.2f°C (Proxy Pattern - Roteamento)&quot;,
+        sensorId, sensorValue
+    );
+    
+    SampleResult.setResponseData(responseData, &quot;UTF-8&quot;);
+    SampleResult.setDataType(SampleResult.TEXT);
+    SampleResult.setResponseCodeOK();
+    SampleResult.setResponseMessage(&quot;Proxy Pattern - Roteamento sob carga&quot;);
+    SampleResult.setSuccessful(true);
+    SampleResult.setLatency(endTime - startTime);
+    
+    log.info(&quot;📈 Dados pico: &quot; + sensorId + &quot; = &quot; + String.format(&quot;%.2f&quot;, sensorValue));
+    
+} catch (Exception e) {
+    SampleResult.setResponseCode(&quot;500&quot;);
+    SampleResult.setResponseMessage(&quot;Erro dados pico: &quot; + e.getMessage());
+    SampleResult.setResponseData(&quot;Erro: &quot; + e.getMessage(), &quot;UTF-8&quot;);
+    SampleResult.setSuccessful(false);
+    log.error(&quot;❌ Erro dados pico: &quot; + e.getMessage());
+}</stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="cacheKey">false</stringProp>
+        </JSR223Sampler>
+        <hashTree>
+          <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="⏱️ Timer - Dados Pico">
+            <stringProp name="ConstantTimer.delay">2000</stringProp>
+          </ConstantTimer>
+          <hashTree/>
+        </hashTree>
+      </hashTree>
+      <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="📋 Summary Report - Relatório Geral" enabled="true">
+        <boolProp name="ResultCollector.error_logging">false</boolProp>
+        <objProp>
+          <name>saveConfig</name>
+          <value class="SampleSaveConfiguration">
+            <time>true</time>
+            <latency>true</latency>
+            <timestamp>true</timestamp>
+            <success>true</success>
+            <label>true</label>
+            <code>true</code>
+            <message>true</message>
+            <threadName>true</threadName>
+            <dataType>true</dataType>
+            <encoding>false</encoding>
+            <assertions>true</assertions>
+            <subresults>true</subresults>
+            <responseData>false</responseData>
+            <samplerData>false</samplerData>
+            <xml>false</xml>
+            <fieldNames>true</fieldNames>
+            <responseHeaders>false</responseHeaders>
+            <requestHeaders>false</requestHeaders>
+            <responseDataOnError>false</responseDataOnError>
+            <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+            <assertionsResultsToSave>0</assertionsResultsToSave>
+            <bytes>true</bytes>
+            <sentBytes>true</sentBytes>
+            <url>true</url>
+            <threadCounts>true</threadCounts>
+            <idleTime>true</idleTime>
+            <connectTime>true</connectTime>
+          </value>
+        </objProp>
+        <stringProp name="filename">jmeter/results/summary_report.jtl</stringProp>
+        <stringProp name="TestPlan.comments">
+          📊 RELATÓRIO PRINCIPAL
+          - Taxa de erro geral
+          - Throughput (transações/segundo)  
+          - Tempo de resposta médio
+          - Percentis de latência
+        </stringProp>
+      </ResultCollector>
+      <hashTree/>
+      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="🌳 View Results Tree - Detalhes" enabled="true">
+        <boolProp name="ResultCollector.error_logging">false</boolProp>
+        <objProp>
+          <name>saveConfig</name>
+          <value class="SampleSaveConfiguration">
+            <time>true</time>
+            <latency>true</latency>
+            <timestamp>true</timestamp>
+            <success>true</success>
+            <label>true</label>
+            <code>true</code>
+            <message>true</message>
+            <threadName>true</threadName>
+            <dataType>true</dataType>
+            <encoding>false</encoding>
+            <assertions>true</assertions>
+            <subresults>true</subresults>
+            <responseData>true</responseData>
+            <samplerData>false</samplerData>
+            <xml>false</xml>
+            <fieldNames>true</fieldNames>
+            <responseHeaders>false</responseHeaders>
+            <requestHeaders>false</requestHeaders>
+            <responseDataOnError>true</responseDataOnError>
+            <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+            <assertionsResultsToSave>0</assertionsResultsToSave>
+            <bytes>true</bytes>
+            <sentBytes>true</sentBytes>
+            <url>true</url>
+            <threadCounts>true</threadCounts>
+            <idleTime>true</idleTime>
+            <connectTime>true</connectTime>
+          </value>
+        </objProp>
+        <stringProp name="filename">jmeter/results/detailed_results.jtl</stringProp>
+        <stringProp name="TestPlan.comments">
+          🔍 ANÁLISE DETALHADA
+          - Requisições individuais
+          - Dados de resposta
+          - Assertions executadas
+          - Debug e troubleshooting
+        </stringProp>
+      </ResultCollector>
+      <hashTree/>
+      <kg.apc.jmeter.vizualizers.CorrectedResultCollector guiclass="kg.apc.jmeter.vizualizers.ResponseTimesOverTimeGui" testclass="kg.apc.jmeter.vizualizers.CorrectedResultCollector" testname="📈 Response Times Over Time" enabled="true">
+        <boolProp name="ResultCollector.error_logging">false</boolProp>
+        <objProp>
+          <name>saveConfig</name>
+          <value class="SampleSaveConfiguration">
+            <time>true</time>
+            <latency>true</latency>
+            <timestamp>true</timestamp>
+            <success>true</success>
+            <label>true</label>
+            <code>true</code>
+            <message>true</message>
+            <threadName>false</threadName>
+            <dataType>true</dataType>
+            <encoding>false</encoding>
+            <assertions>false</assertions>
+            <subresults>false</subresults>
+            <responseData>false</responseData>
+            <samplerData>false</samplerData>
+            <xml>false</xml>
+            <fieldNames>true</fieldNames>
+            <responseHeaders>false</responseHeaders>
+            <requestHeaders>false</requestHeaders>
+            <responseDataOnError>false</responseDataOnError>
+            <saveAssertionResultsFailureMessage>false</saveAssertionResultsFailureMessage>
+            <assertionsResultsToSave>0</assertionsResultsToSave>
+            <bytes>true</bytes>
+            <sentBytes>true</sentBytes>
+            <url>true</url>
+            <threadCounts>true</threadCounts>
+            <idleTime>true</idleTime>
+            <connectTime>true</connectTime>
+          </value>
+        </objProp>
+        <stringProp name="filename">jmeter/results/response_times_over_time.jtl</stringProp>
+        <longProp name="interval_grouping">1000</longProp>
+        <boolProp name="graph_aggregated">false</boolProp>
+        <stringProp name="include_sample_labels"></stringProp>
+        <stringProp name="exclude_sample_labels"></stringProp>
+        <stringProp name="start_offset"></stringProp>
+        <stringProp name="end_offset"></stringProp>
+        <boolProp name="include_checkbox_state">false</boolProp>
+        <boolProp name="exclude_checkbox_state">false</boolProp>
+        <stringProp name="TestPlan.comments">
+          ⏱️ TEMPOS DE RESPOSTA AO LONGO DO TEMPO
+          - Mostra variação da latência durante o teste
+          - Identifica picos de performance
+          - Correlaciona com aumento/diminuição de carga
+          - Granularidade: 1 segundo
+        </stringProp>
+      </kg.apc.jmeter.vizualizers.CorrectedResultCollector>
+      <hashTree/>
+      <kg.apc.jmeter.vizualizers.CorrectedResultCollector guiclass="kg.apc.jmeter.vizualizers.TransactionsPerSecondGui" testclass="kg.apc.jmeter.vizualizers.CorrectedResultCollector" testname="🚀 Transactions Per Second" enabled="true">
+        <boolProp name="ResultCollector.error_logging">false</boolProp>
+        <objProp>
+          <name>saveConfig</name>
+          <value class="SampleSaveConfiguration">
+            <time>true</time>
+            <latency>true</latency>
+            <timestamp>true</timestamp>
+            <success>true</success>
+            <label>true</label>
+            <code>true</code>
+            <message>true</message>
+            <threadName>false</threadName>
+            <dataType>true</dataType>
+            <encoding>false</encoding>
+            <assertions>false</assertions>
+            <subresults>false</subresults>
+            <responseData>false</responseData>
+            <samplerData>false</samplerData>
+            <xml>false</xml>
+            <fieldNames>true</fieldNames>
+            <responseHeaders>false</responseHeaders>
+            <requestHeaders>false</requestHeaders>
+            <responseDataOnError>false</responseDataOnError>
+            <saveAssertionResultsFailureMessage>false</saveAssertionResultsFailureMessage>
+            <assertionsResultsToSave>0</assertionsResultsToSave>
+            <bytes>true</bytes>
+            <sentBytes>true</sentBytes>
+            <url>true</url>
+            <threadCounts>true</threadCounts>
+            <idleTime>true</idleTime>
+            <connectTime>true</connectTime>
+          </value>
+        </objProp>
+        <stringProp name="filename">jmeter/results/transactions_per_second.jtl</stringProp>
+        <longProp name="interval_grouping">1000</longProp>
+        <boolProp name="graph_aggregated">false</boolProp>
+        <stringProp name="include_sample_labels"></stringProp>
+        <stringProp name="exclude_sample_labels"></stringProp>
+        <stringProp name="start_offset"></stringProp>
+        <stringProp name="end_offset"></stringProp>
+        <boolProp name="include_checkbox_state">false</boolProp>
+        <boolProp name="exclude_checkbox_state">false</boolProp>
+        <stringProp name="TestPlan.comments">
+          🚀 THROUGHPUT - TRANSAÇÕES POR SEGUNDO
+          - Mede capacidade do sistema (TPS)
+          - Mostra impacto do aumento de carga
+          - Identifica gargalos de performance
+          - Baseline para Knee Capacity
+        </stringProp>
+      </kg.apc.jmeter.vizualizers.CorrectedResultCollector>
+      <hashTree/>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>

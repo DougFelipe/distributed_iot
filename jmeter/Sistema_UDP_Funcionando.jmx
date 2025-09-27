@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="📊 Sistema IoT - UDP Real (Corrigido)">
+      <stringProp name="TestPlan.comments">
+        🎯 TESTE UDP REAL - FUNCIONANDO
+        
+        ✅ Plugin UDP instalado: jmeter-plugins-udp-0.4.jar
+        ✅ Java 21 compatível
+        ✅ Sintaxe JSR223 corrigida
+        ✅ Sistema rodando na porta 9090
+        
+        📁 LOGS SALVOS EM: results/
+      </stringProp>
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.tearDown_on_shutdown">true</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+      <elementProp name="TestPlan.arguments" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="🔧 Configurações UDP">
+        <collectionProp name="Arguments.arguments">
+          <elementProp name="IOT_SERVER_HOST" elementType="Argument">
+            <stringProp name="Argument.name">IOT_SERVER_HOST</stringProp>
+            <stringProp name="Argument.value">localhost</stringProp>
+          </elementProp>
+          <elementProp name="IOT_GATEWAY_PORT" elementType="Argument">
+            <stringProp name="Argument.name">IOT_GATEWAY_PORT</stringProp>
+            <stringProp name="Argument.value">9090</stringProp>
+          </elementProp>
+        </collectionProp>
+      </elementProp>
+    </TestPlan>
+    <hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="🔋 Sensores UDP Reais">
+        <stringProp name="TestPlan.comments">3 sensores, 10 loops = 30 mensagens UDP</stringProp>
+        <intProp name="ThreadGroup.num_threads">3</intProp>
+        <intProp name="ThreadGroup.ramp_time">3</intProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
+          <stringProp name="LoopController.loops">10</stringProp>
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+        </elementProp>
+      </ThreadGroup>
+      <hashTree>
+        <kg.apc.jmeter.samplers.UDPSampler guiclass="kg.apc.jmeter.samplers.UDPSamplerGui" testclass="kg.apc.jmeter.samplers.UDPSampler" testname="📡 UDP - Registro Sensor">
+          <stringProp name="hostname">localhost</stringProp>
+          <stringProp name="port">9090</stringProp>
+          <stringProp name="data">SENSOR_REGISTER|TEMP_SENSOR_${__threadNum}|TEMPERATURE|Lab-${__threadNum}|${__time()}|0.0</stringProp>
+          <stringProp name="encodeclass"></stringProp>
+          <stringProp name="timeout">3000</stringProp>
+          <boolProp name="waitresponse">false</boolProp>
+          <boolProp name="closechannel">false</boolProp>
+          <stringProp name="bind_address"></stringProp>
+          <stringProp name="bind_port"></stringProp>
+          <stringProp name="TestPlan.comments">Registro do sensor via UDP real</stringProp>
+        </kg.apc.jmeter.samplers.UDPSampler>
+        <hashTree>
+          <OnceOnlyController guiclass="OnceOnlyControllerGui" testclass="OnceOnlyController" testname="Registro Uma Vez"/>
+          <hashTree/>
+        </hashTree>
+        <kg.apc.jmeter.samplers.UDPSampler guiclass="kg.apc.jmeter.samplers.UDPSamplerGui" testclass="kg.apc.jmeter.samplers.UDPSampler" testname="📊 UDP - Dados Sensor">
+          <stringProp name="hostname">localhost</stringProp>
+          <stringProp name="port">9090</stringProp>
+          <stringProp name="data">SENSOR_DATA|TEMP_SENSOR_${__threadNum}|TEMPERATURE|${__time()}|${__Random(15,35)}.${__Random(0,99)}</stringProp>
+          <stringProp name="encodeclass"></stringProp>
+          <stringProp name="timeout">3000</stringProp>
+          <boolProp name="waitresponse">false</boolProp>
+          <boolProp name="closechannel">false</boolProp>
+          <stringProp name="bind_address"></stringProp>
+          <stringProp name="bind_port"></stringProp>
+          <stringProp name="TestPlan.comments">Dados de temperatura via UDP real</stringProp>
+        </kg.apc.jmeter.samplers.UDPSampler>
+        <hashTree>
+          <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="⏱️ Timer Dados (2s)">
+            <stringProp name="ConstantTimer.delay">2000</stringProp>
+          </ConstantTimer>
+          <hashTree/>
+        </hashTree>
+        <kg.apc.jmeter.samplers.UDPSampler guiclass="kg.apc.jmeter.samplers.UDPSamplerGui" testclass="kg.apc.jmeter.samplers.UDPSampler" testname="💓 UDP - Heartbeat">
+          <stringProp name="hostname">localhost</stringProp>
+          <stringProp name="port">9090</stringProp>
+          <stringProp name="data">HEARTBEAT|TEMP_SENSOR_${__threadNum}|TEMPERATURE|${__time()}|ALIVE</stringProp>
+          <stringProp name="encodeclass"></stringProp>
+          <stringProp name="timeout">3000</stringProp>
+          <boolProp name="waitresponse">false</boolProp>
+          <boolProp name="closechannel">false</boolProp>
+          <stringProp name="bind_address"></stringProp>
+          <stringProp name="bind_port"></stringProp>
+          <stringProp name="TestPlan.comments">Heartbeat via UDP real</stringProp>
+        </kg.apc.jmeter.samplers.UDPSampler>
+        <hashTree>
+          <IfController guiclass="IfControllerPanel" testclass="IfController" testname="Heartbeat Condicional">
+            <stringProp name="IfController.condition">${__jexl3(${__counter(FALSE,)} % 3 == 0)}</stringProp>
+            <boolProp name="IfController.evaluateAll">false</boolProp>
+            <boolProp name="IfController.useExpression">true</boolProp>
+          </IfController>
+          <hashTree/>
+        </hashTree>
+      </hashTree>
+      <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="📋 UDP Summary">
+        <boolProp name="ResultCollector.error_logging">false</boolProp>
+        <objProp>
+          <name>saveConfig</name>
+          <value class="SampleSaveConfiguration">
+            <time>true</time>
+            <latency>true</latency>
+            <timestamp>true</timestamp>
+            <success>true</success>
+            <label>true</label>
+            <code>true</code>
+            <message>true</message>
+            <threadName>true</threadName>
+            <dataType>true</dataType>
+            <encoding>false</encoding>
+            <assertions>true</assertions>
+            <subresults>true</subresults>
+            <responseData>false</responseData>
+            <samplerData>false</samplerData>
+            <xml>false</xml>
+            <fieldNames>true</fieldNames>
+            <responseHeaders>false</responseHeaders>
+            <requestHeaders>false</requestHeaders>
+            <responseDataOnError>false</responseDataOnError>
+            <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+            <assertionsResultsToSave>0</assertionsResultsToSave>
+            <bytes>true</bytes>
+            <sentBytes>true</sentBytes>
+            <url>true</url>
+            <threadCounts>true</threadCounts>
+            <idleTime>true</idleTime>
+            <connectTime>true</connectTime>
+          </value>
+        </objProp>
+        <stringProp name="filename">results/udp_summary.jtl</stringProp>
+      </ResultCollector>
+      <hashTree/>
+      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="🌳 UDP Details">
+        <boolProp name="ResultCollector.error_logging">false</boolProp>
+        <objProp>
+          <name>saveConfig</name>
+          <value class="SampleSaveConfiguration">
+            <time>true</time>
+            <latency>true</latency>
+            <timestamp>true</timestamp>
+            <success>true</success>
+            <label>true</label>
+            <code>true</code>
+            <message>true</message>
+            <threadName>true</threadName>
+            <dataType>true</dataType>
+            <encoding>false</encoding>
+            <assertions>false</assertions>
+            <subresults>false</subresults>
+            <responseData>true</responseData>
+            <samplerData>false</samplerData>
+            <xml>false</xml>
+            <fieldNames>true</fieldNames>
+            <responseHeaders>false</responseHeaders>
+            <requestHeaders>false</requestHeaders>
+            <responseDataOnError>true</responseDataOnError>
+            <saveAssertionResultsFailureMessage>false</saveAssertionResultsFailureMessage>
+            <assertionsResultsToSave>0</assertionsResultsToSave>
+            <bytes>true</bytes>
+            <sentBytes>true</sentBytes>
+            <threadCounts>true</threadCounts>
+          </value>
+        </objProp>
+        <stringProp name="filename">results/udp_details.jtl</stringProp>
+      </ResultCollector>
+      <hashTree/>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>

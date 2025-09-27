@@ -150,6 +150,8 @@ try {
     vars.put("THREAD_NUM", threadNum);
     
     log.info("✅ Sensor registrado: " + sensorId + " (" + sensorType + ")");
+    log.info("📝 Dados enviados para: " + vars.get("IOT_SERVER_HOST") + ":" + vars.get("IOT_GATEWAY_PORT"));
+    log.info("📦 Mensagem: " + registerMessage);
     
 } catch (Exception e) {
     SampleResult.setResponseCode("500");
@@ -157,6 +159,7 @@ try {
     SampleResult.setResponseData("Erro: " + e.getMessage(), "UTF-8");
     SampleResult.setSuccessful(false);
     log.error("❌ Erro no registro: " + e.getMessage());
+    log.error("❌ Stack trace: " + Arrays.toString(e.getStackTrace()));
 }</stringProp>
         </JSR223Sampler>
         <hashTree>
@@ -581,7 +584,7 @@ try {
             <connectTime>true</connectTime>
           </value>
         </objProp>
-        <stringProp name="filename">results/summary_report.jtl</stringProp>
+        <stringProp name="filename">jmeter/results/summary_report.jtl</stringProp>
         <stringProp name="TestPlan.comments">
           📊 RELATÓRIO PRINCIPAL
           - Taxa de erro geral
@@ -627,7 +630,7 @@ try {
             <connectTime>true</connectTime>
           </value>
         </objProp>
-        <stringProp name="filename">results/detailed_results.jtl</stringProp>
+        <stringProp name="filename">jmeter/results/detailed_results.jtl</stringProp>
         <stringProp name="TestPlan.comments">
           🔍 ANÁLISE DETALHADA
           - Requisições individuais
@@ -673,7 +676,7 @@ try {
             <connectTime>true</connectTime>
           </value>
         </objProp>
-        <stringProp name="filename">results/response_times_over_time.jtl</stringProp>
+        <stringProp name="filename">jmeter/results/response_times_over_time.jtl</stringProp>
         <longProp name="interval_grouping">1000</longProp>
         <boolProp name="graph_aggregated">false</boolProp>
         <stringProp name="include_sample_labels"></stringProp>
@@ -727,7 +730,7 @@ try {
             <connectTime>true</connectTime>
           </value>
         </objProp>
-        <stringProp name="filename">results/transactions_per_second.jtl</stringProp>
+        <stringProp name="filename">jmeter/results/transactions_per_second.jtl</stringProp>
         <longProp name="interval_grouping">1000</longProp>
         <boolProp name="graph_aggregated">false</boolProp>
         <stringProp name="include_sample_labels"></stringProp>
@@ -781,7 +784,7 @@ try {
             <connectTime>false</connectTime>
           </value>
         </objProp>
-        <stringProp name="filename">results/active_threads_over_time.jtl</stringProp>
+        <stringProp name="filename">jmeter/results/active_threads_over_time.jtl</stringProp>
         <longProp name="interval_grouping">1000</longProp>
         <boolProp name="graph_aggregated">false</boolProp>
         <stringProp name="include_sample_labels"></stringProp>
