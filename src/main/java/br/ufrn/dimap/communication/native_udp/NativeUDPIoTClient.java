@@ -79,12 +79,12 @@ public class NativeUDPIoTClient {
             }
         }, 2, 5 + random.nextInt(10), TimeUnit.SECONDS);
         
-        // Enviar heartbeat a cada 30 segundos
+        // Enviar heartbeat a cada 5 segundos (para apresentação)
         scheduler.scheduleAtFixedRate(() -> {
             if (running.get()) {
                 sendHeartbeat();
             }
-        }, 10, 30, TimeUnit.SECONDS);
+        }, 2, 5, TimeUnit.SECONDS);
         
         // Simular falhas ocasionais (5% de chance a cada minuto)
         scheduler.scheduleAtFixedRate(() -> {

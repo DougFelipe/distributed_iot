@@ -42,7 +42,7 @@ public class IoTDistributedSystem {
             "===============================================================================";
     
     private static final int GATEWAY_PORT = 9090;
-    private static final int HEARTBEAT_TIMEOUT = 30; // segundos
+    private static final int HEARTBEAT_TIMEOUT = 5; // segundos (para apresentação)
     
     private static volatile boolean running = true;
     private static ScheduledExecutorService scheduler;
@@ -86,11 +86,11 @@ public class IoTDistributedSystem {
             // 5. Aguardar inicialização
             Thread.sleep(2000);
             
-            // 6. Criar sensores IoT de teste
-            createTestSensors(gateway);
-            
-            // 7. Configurar monitoramento periódico
+            // 6. Configurar monitoramento periódico (sem sensores hardcoded)
             setupPeriodicMonitoring(gateway, heartbeatMonitor);
+            
+            // NOTA: Sensores serão criados dinamicamente via JMeter
+            // Cada thread do JMeter = 1 sensor IoT simulado
             
             logger.info("✅ Sistema IoT Distribuído iniciado com sucesso!");
             logger.info("📊 Padrões GoF implementados:");
@@ -111,8 +111,10 @@ public class IoTDistributedSystem {
     }
     
     /**
-     * Cria sensores IoT de teste
+     * Cria sensores IoT de teste (DEPRECATED - Sensores criados via JMeter)
+     * Mantido para referência, mas não usado no sistema reativo
      */
+    @Deprecated
     private static void createTestSensors(IoTGateway gateway) throws InterruptedException {
         logger.info("🤖 Criando sensores IoT de teste...");
         
