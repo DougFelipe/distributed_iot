@@ -124,9 +124,17 @@ public class IoTDistributedSystem {
             IoTSensor.SensorType.MOTION
         };
         
+        String[] sensorNames = {
+            "TEMP_SENSOR_01",
+            "HUMIDITY_SENSOR_01", 
+            "PRESSURE_SENSOR_01",
+            "LIGHT_SENSOR_01",
+            "MOTION_SENSOR_01"
+        };
+        
         for (int i = 0; i < sensorTypes.length; i++) {
-            String sensorId = String.format("SENSOR_%03d", i + 1);
-            String nodeId = "NODE-" + String.format("%03d", i + 1);
+            String sensorId = sensorNames[i];
+            String nodeId = "NODE-" + sensorTypes[i].name() + "-" + String.format("%02d", i + 1);
             String location = "Lab-" + (char)('A' + i);
             IoTSensor sensor = new IoTSensor(sensorId, nodeId, sensorTypes[i], location);
             

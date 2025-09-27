@@ -204,8 +204,10 @@ public class IoTGateway {
         // Atualizar Version Vector global
         updateVersionVector(message);
         
-        logger.debug("📨 Mensagem processada de {}:{} - Tipo: {}", 
-                    senderHost, senderPort, message.getType());
+        logger.debug("📨 Mensagem processada de {}:{} - Tipo: {} [Código: {}] - ID: {} - Sensor: {} - Valor: {} {} - Total Msgs: {}", 
+                    senderHost, senderPort, message.getType(), message.getType().getCode(),
+                    message.getMessageId(), message.getSensorId(), message.getSensorValue(), 
+                    message.getSensorType(), totalMessages.get());
         
         // Notificar observers
         notifyObservers("MESSAGE_RECEIVED", message);

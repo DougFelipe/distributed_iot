@@ -102,8 +102,10 @@ public class NativeUDPIoTClient {
             
             sendMessage(dataMessage);
             
-            logger.debug("📊 Dados enviados: {} = {:.2f} {}", 
-                        sensor.getSensorId(), value, sensor.getType().getUnit());
+            logger.debug("📊 Dados enviados: {} = {:.2f} {} - Msg ID: {} - Tipo: {} [Código: {}] - Timestamp: {}", 
+                        sensor.getSensorId(), value, sensor.getType().getUnit(),
+                        dataMessage.getMessageId(), dataMessage.getType(), 
+                        dataMessage.getType().getCode(), dataMessage.getTimestamp());
             
         } catch (Exception e) {
             logger.error("❌ Erro ao enviar dados do sensor: {}", e.getMessage());
@@ -115,7 +117,10 @@ public class NativeUDPIoTClient {
             IoTMessage heartbeatMessage = sensor.createHeartbeatMessage();
             sendMessage(heartbeatMessage);
             
-            logger.debug("💓 Heartbeat enviado: {}", sensor.getSensorId());
+            logger.debug("💓 Heartbeat enviado: {} - Msg ID: {} - Tipo: {} [Código: {}] - Timestamp: {}", 
+                        sensor.getSensorId(), heartbeatMessage.getMessageId(), 
+                        heartbeatMessage.getType(), heartbeatMessage.getType().getCode(),
+                        heartbeatMessage.getTimestamp());
             
         } catch (Exception e) {
             logger.error("❌ Erro ao enviar heartbeat: {}", e.getMessage());

@@ -198,8 +198,10 @@ public class UDPCommunicationStrategy implements CommunicationStrategy {
             String senderHost = packet.getAddress().getHostAddress();
             int senderPort = packet.getPort();
             
-            logger.debug("📬 Pacote UDP recebido de {}:{} - Tipo: {}", 
-                         senderHost, senderPort, message.getType());
+            logger.debug("📬 Pacote UDP recebido de {}:{} - Tipo: {} [Código: {}] - Sensor: {} - Valor: {} {} - Timestamp: {}", 
+                         senderHost, senderPort, message.getType(), message.getType().getCode(), 
+                         message.getSensorId(), message.getSensorValue(), message.getSensorType(),
+                         message.getTimestamp());
             
             // Processar mensagem
             processMessage(message, senderHost, senderPort);

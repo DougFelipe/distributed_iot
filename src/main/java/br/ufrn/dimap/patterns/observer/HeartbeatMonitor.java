@@ -100,8 +100,10 @@ public class HeartbeatMonitor implements IoTObserver {
             lastHeartbeat.put(senderId, LocalDateTime.now());
             messageCount.computeIfAbsent(senderId, k -> new AtomicLong(0)).incrementAndGet();
             
-            logger.debug("💓 Heartbeat atualizado: {} (total: {})", 
-                        senderId, messageCount.get(senderId).get());
+            long totalMsgs = messageCount.get(senderId).get();
+            logger.debug("💓 Heartbeat atualizado: {} (total: {}) - Tipo Msg: {} [Código: {}] - Valor: {} {}", 
+                        senderId, totalMsgs, message.getType(), message.getType().getCode(),
+                        message.getSensorValue(), message.getSensorType());
         }
     }
     
