@@ -49,13 +49,13 @@ try {
     String message = &quot;SENSOR_REGISTER|&quot; + sensorId + &quot;|TEMPERATURE|Lab-&quot; + ctx.getThreadNum() + &quot;|&quot; + new java.util.Date() + &quot;|25.5&quot;;
     
     byte[] buffer = message.getBytes(&quot;UTF-8&quot;);
-    InetAddress address = InetAddress.getByName(&quot;${SERVER_HOST}&quot;);
-    DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, Integer.parseInt(&quot;${GATEWAY_PORT}&quot;));
+    InetAddress address = InetAddress.getByName(&quot;localhost&quot;);
+    DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, 9090);
     
     long startTime = System.currentTimeMillis();
     socket.send(packet);
     
-    byte[] responseBuffer = new byte[1024);
+    byte[] responseBuffer = new byte[1024];
     DatagramPacket responsePacket = new DatagramPacket(responseBuffer, responseBuffer.length);
     socket.setSoTimeout(2000);
     
@@ -95,7 +95,7 @@ try {
           <hashTree/>
         </hashTree>
       </hashTree>
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="2. Singleton Pattern - Gateway Instance">
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="2. Singleton Pattern - Gateway Instance" enabled="true">
         <intProp name="ThreadGroup.num_threads">3</intProp>
         <intProp name="ThreadGroup.ramp_time">1</intProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
@@ -106,7 +106,7 @@ try {
         </elementProp>
       </ThreadGroup>
       <hashTree>
-        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="Gateway Status Request">
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="Gateway Status Request" enabled="true">
           <stringProp name="scriptLanguage">java</stringProp>
           <stringProp name="parameters"></stringProp>
           <stringProp name="filename"></stringProp>
@@ -120,8 +120,8 @@ try {
     String message = &quot;GATEWAY_STATUS|REQUEST_&quot; + ctx.getThreadNum() + &quot;|&quot; + System.currentTimeMillis();
     
     byte[] buffer = message.getBytes(&quot;UTF-8&quot;);
-    InetAddress address = InetAddress.getByName(&quot;${SERVER_HOST}&quot;);
-    DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, Integer.parseInt(&quot;${GATEWAY_PORT}&quot;));
+    InetAddress address = InetAddress.getByName(&quot;localhost&quot;);
+    DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, 9090);
     
     long startTime = System.currentTimeMillis();
     socket.send(packet);
@@ -166,7 +166,7 @@ try {
           <hashTree/>
         </hashTree>
       </hashTree>
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="3. Observer Pattern - Heartbeat Monitor">
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="3. Observer Pattern - Heartbeat Monitor" enabled="true">
         <intProp name="ThreadGroup.num_threads">2</intProp>
         <intProp name="ThreadGroup.ramp_time">1</intProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
@@ -177,7 +177,7 @@ try {
         </elementProp>
       </ThreadGroup>
       <hashTree>
-        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="Heartbeat Signal">
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="Heartbeat Signal" enabled="true">
           <stringProp name="scriptLanguage">java</stringProp>
           <stringProp name="parameters"></stringProp>
           <stringProp name="filename"></stringProp>
@@ -192,8 +192,8 @@ try {
     String message = &quot;HEARTBEAT|&quot; + sensorId + &quot;|&quot; + System.currentTimeMillis() + &quot;|ALIVE&quot;;
     
     byte[] buffer = message.getBytes(&quot;UTF-8&quot;);
-    InetAddress address = InetAddress.getByName(&quot;${SERVER_HOST}&quot;);
-    DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, Integer.parseInt(&quot;${GATEWAY_PORT}&quot;));
+    InetAddress address = InetAddress.getByName(&quot;localhost&quot;);
+    DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, 9090);
     
     long startTime = System.currentTimeMillis();
     socket.send(packet);
@@ -238,7 +238,7 @@ try {
           <hashTree/>
         </hashTree>
       </hashTree>
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="4. Proxy Pattern - Message Routing">
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="4. Proxy Pattern - Message Routing" enabled="true">
         <intProp name="ThreadGroup.num_threads">2</intProp>
         <intProp name="ThreadGroup.ramp_time">1</intProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
@@ -249,7 +249,7 @@ try {
         </elementProp>
       </ThreadGroup>
       <hashTree>
-        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="Sensor Data via Proxy">
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="Sensor Data via Proxy" enabled="true">
           <stringProp name="scriptLanguage">java</stringProp>
           <stringProp name="parameters"></stringProp>
           <stringProp name="filename"></stringProp>
@@ -266,11 +266,11 @@ try {
     String sensorType = sensorTypes[new Random().nextInt(sensorTypes.length)];
     double value = 20.0 + (Math.random() * 80.0);
     
-    String message = &quot;SENSOR_DATA|&quot; + sensorId + &quot;|&quot; + sensorType + &quot;|&quot; + String.format(&quot;%.2f&quot;, value) + &quot;|&quot; + System.currentTimeMillis();
+    String message = &quot;SENSOR_DATA|&quot; + sensorId + &quot;|&quot; + sensorType + &quot;|&quot; + value + &quot;|&quot; + System.currentTimeMillis();
     
     byte[] buffer = message.getBytes(&quot;UTF-8&quot;);
-    InetAddress address = InetAddress.getByName(&quot;${SERVER_HOST}&quot;);
-    DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, Integer.parseInt(&quot;${GATEWAY_PORT}&quot;));
+    InetAddress address = InetAddress.getByName(&quot;localhost&quot;);
+    DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, 9090);
     
     long startTime = System.currentTimeMillis();
     socket.send(packet);
