@@ -187,27 +187,120 @@ public class UDPCommunicationStrategy implements CommunicationStrategy {
     
     /**
      * Manipula pacote recebido via UDP
+     * Suporta tanto objetos serializados quanto mensagens de texto (JMeter)
      */
     private void handleReceivedPacket(DatagramPacket packet) {
         try {
-            // Deserializar mensagem
-            ByteArrayInputStream bais = new ByteArrayInputStream(packet.getData(), 0, packet.getLength());
-            ObjectInputStream ois = new ObjectInputStream(bais);
-            IoTMessage message = (IoTMessage) ois.readObject();
-            
             String senderHost = packet.getAddress().getHostAddress();
             int senderPort = packet.getPort();
             
-            logger.debug("📬 Pacote UDP recebido de {}:{} - Tipo: {} [Código: {}] - Sensor: {} - Valor: {} {} - Timestamp: {}", 
-                         senderHost, senderPort, message.getType(), message.getType().getCode(), 
-                         message.getSensorId(), message.getSensorValue(), message.getSensorType(),
-                         message.getTimestamp());
-            
-            // Processar mensagem
-            processMessage(message, senderHost, senderPort);
+            // Tentar primeiro como objeto serializado
+            try {
+                ByteArrayInputStream bais = new ByteArrayInputStream(packet.getData(), 0, packet.getLength());
+                ObjectInputStream ois = new ObjectInputStream(bais);
+                IoTMessage message = (IoTMessage) ois.readObject();
+                
+                logger.debug("📬 Pacote UDP serializado recebido de {}:{} - Tipo: {} [Código: {}] - Sensor: {} - Valor: {} {} - Timestamp: {}", 
+                             senderHost, senderPort, message.getType(), message.getType().getCode(), 
+                             message.getSensorId(), message.getSensorValue(), message.getSensorType(),
+                             message.getTimestamp());
+                
+                // Processar mensagem
+                processMessage(message, senderHost, senderPort);
+                
+            } catch (Exception serializationError) {
+                // Se falhar a deserialização, tentar como texto (JMeter)
+                String textMessage = new String(packet.getData(), 0, packet.getLength(), "UTF-8").trim();
+                
+                logger.debug("📬 Pacote UDP texto recebido de {}:{} - Conteúdo: '{}'", 
+                             senderHost, senderPort, textMessage);
+                
+                // Processar mensagem de texto
+                IoTMessage parsedMessage = parseTextMessage(textMessage, senderHost, senderPort);
+                if (parsedMessage != null) {
+                    processMessage(parsedMessage, senderHost, senderPort);
+                    
+                    logger.info("✅ Mensagem de texto processada com sucesso - Tipo: {} - Sensor: {} - Valor: {}", 
+                               parsedMessage.getType(), parsedMessage.getSensorId(), parsedMessage.getSensorValue());
+                } else {
+                    logger.warn("⚠️ Mensagem de texto não reconhecida: '{}'", textMessage);
+                }
+            }
             
         } catch (Exception e) {
             logger.error("❌ Erro ao processar pacote UDP: {}", e.getMessage());
+        }
+    }
+    
+    /**
+     * Parser para mensagens de texto do JMeter
+     * Formato esperado: TIPO|SENSOR_ID|VALOR|UNIDADE|TIMESTAMP|OUTROS...
+     */
+    private IoTMessage parseTextMessage(String textMessage, String senderHost, int senderPort) {
+        try {
+            String[] parts = textMessage.split("\\|");
+            if (parts.length < 2) {
+                return null;
+            }
+            
+            String messageType = parts[0].trim();
+            String sensorId = parts[1].trim();
+            
+            // Criar Version Vector vazio para mensagens de texto
+            ConcurrentHashMap<String, Integer> versionVector = new ConcurrentHashMap<>();
+            versionVector.put(sensorId, 1);
+            
+            switch (messageType) {
+                case "SENSOR_REGISTER":
+                    // Formato: SENSOR_REGISTER|SENSOR_ID|SENSOR_TYPE|LOCATION|TIMESTAMP|INITIAL_VALUE
+                    String sensorType = parts.length > 2 ? parts[2] : "UNKNOWN";
+                    String location = parts.length > 3 ? parts[3] : "Unknown";
+                    double initialValue = parts.length > 5 ? Double.parseDouble(parts[5]) : 0.0;
+                    
+                    return new IoTMessage(
+                        sensorId,
+                        IoTMessage.MessageType.SENSOR_REGISTER,
+                        "Registro via JMeter: " + sensorType + " em " + location,
+                        initialValue,
+                        sensorType,
+                        versionVector
+                    );
+                    
+                case "SENSOR_DATA":
+                    // Formato: SENSOR_DATA|SENSOR_ID|VALOR|UNIDADE|TIMESTAMP
+                    double value = parts.length > 2 ? Double.parseDouble(parts[2]) : 0.0;
+                    String unit = parts.length > 3 ? parts[3] : "";
+                    
+                    return new IoTMessage(
+                        sensorId,
+                        IoTMessage.MessageType.SENSOR_DATA,
+                        "Dados via JMeter: " + value + " " + unit,
+                        value,
+                        unit,
+                        versionVector
+                    );
+                    
+                case "HEARTBEAT":
+                    // Formato: HEARTBEAT|SENSOR_ID|TIMESTAMP|STATUS
+                    String status = parts.length > 3 ? parts[3] : "ACTIVE";
+                    
+                    return new IoTMessage(
+                        sensorId,
+                        IoTMessage.MessageType.HEARTBEAT,
+                        "Heartbeat via JMeter: " + status,
+                        1.0, // Heartbeat sempre 1.0 (ativo)
+                        "HEARTBEAT",
+                        versionVector
+                    );
+                    
+                default:
+                    logger.debug("🔍 Tipo de mensagem não reconhecido: '{}'", messageType);
+                    return null;
+            }
+            
+        } catch (Exception e) {
+            logger.error("❌ Erro ao fazer parse da mensagem de texto: '{}' - Erro: {}", textMessage, e.getMessage());
+            return null;
         }
     }
     
