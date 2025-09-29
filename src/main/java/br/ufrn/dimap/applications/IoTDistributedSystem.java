@@ -3,6 +3,7 @@ package br.ufrn.dimap.applications;
 import br.ufrn.dimap.patterns.singleton.IoTGateway;
 import br.ufrn.dimap.patterns.strategy.UDPCommunicationStrategy;
 import br.ufrn.dimap.patterns.observer.HeartbeatMonitor;
+import br.ufrn.dimap.components.DataReceiver;
 
 import br.ufrn.dimap.core.IoTSensor;
 import br.ufrn.dimap.communication.native_udp.NativeUDPIoTClient;
@@ -42,6 +43,8 @@ public class IoTDistributedSystem {
             "===============================================================================";
     
     private static final int GATEWAY_PORT = 9090;
+    private static final int DATA_RECEIVER_1_PORT = 9091;
+    private static final int DATA_RECEIVER_2_PORT = 9092;
     private static final int HEARTBEAT_TIMEOUT = 5; // segundos (para apresentação)
     
     private static volatile boolean running = true;
@@ -65,10 +68,10 @@ public class IoTDistributedSystem {
             // 2. STRATEGY PATTERN - Configurar estratégia UDP
             UDPCommunicationStrategy udpStrategy = new UDPCommunicationStrategy();
             
-            // Configurar callback para processar mensagens
+            // Configurar callback para roteamento (PROXY PATTERN)
             udpStrategy.setMessageProcessor((message, host, port) -> {
-                // PROXY PATTERN - Gateway processa e roteia mensagens
-                gateway.processIncomingMessage(message, host, port);
+                // PROXY PATTERN - Gateway roteia mensagens para Data Receivers
+                gateway.routeToDataReceiver(message, host, port);
             });
             
             gateway.setCommunicationStrategy(udpStrategy);
@@ -83,21 +86,40 @@ public class IoTDistributedSystem {
             gateway.start(GATEWAY_PORT);
             logger.info("✅ Gateway IoT iniciado na porta {}", GATEWAY_PORT);
             
-            // 5. Aguardar inicialização
+            // 5. INSTÂNCIAS B - Criar e iniciar Data Receivers (Stateful)
+            logger.info("🏗️ Criando Data Receivers (Instâncias B Stateful)...");
+            DataReceiver receiver1 = new DataReceiver("DATA_RECEIVER_1", DATA_RECEIVER_1_PORT);
+            DataReceiver receiver2 = new DataReceiver("DATA_RECEIVER_2", DATA_RECEIVER_2_PORT);
+            
+            // Iniciar Data Receivers
+            receiver1.start();
+            receiver2.start();
+            logger.info("✅ Data Receivers iniciados nas portas {} e {}", DATA_RECEIVER_1_PORT, DATA_RECEIVER_2_PORT);
+            
+            // Registrar Data Receivers no Gateway (Proxy Pattern)
+            gateway.registerDataReceiver(receiver1);
+            gateway.registerDataReceiver(receiver2);
+            logger.info("✅ Data Receivers registrados no Gateway (PROXY)");
+            
+            // 6. Aguardar inicialização
             Thread.sleep(2000);
             
-            // 6. Configurar monitoramento periódico (sem sensores hardcoded)
-            setupPeriodicMonitoring(gateway, heartbeatMonitor);
+            // 7. Configurar monitoramento periódico
+            setupPeriodicMonitoring(gateway, heartbeatMonitor, receiver1, receiver2);
             
             // NOTA: Sensores serão criados dinamicamente via JMeter
             // Cada thread do JMeter = 1 sensor IoT simulado
             
             logger.info("✅ Sistema IoT Distribuído iniciado com sucesso!");
+            logger.info("📊 Arquitetura Correta Implementada:");
+            logger.info("   🔸 Instâncias A: Sensores IoT (Stateless) - Apenas TEMPERATURA e UMIDADE");
+            logger.info("   🔸 Instâncias B: Data Receivers (Stateful) - 2 receptores com persistência");
+            logger.info("   🔸 Gateway: Proxy roteando mensagens para Data Receivers");
             logger.info("📊 Padrões GoF implementados:");
-            logger.info("   🔸 Singleton: Gateway como instância única");
-            logger.info("   🔸 Strategy: Protocolo UDP selecionável");
+            logger.info("   🔸 Singleton: Gateway como proxy único");
+            logger.info("   🔸 Strategy: Seleção Round Robin de Data Receivers");
             logger.info("   🔸 Observer: Monitoramento de heartbeat");
-            logger.info("   🔸 Proxy: Gateway roteia para sensores");
+            logger.info("   🔸 Proxy: Gateway roteia para Data Receivers");
             logger.info("🔄 Sistema executando. Use Ctrl+C para parar.");
             
             // Loop principal
@@ -120,18 +142,12 @@ public class IoTDistributedSystem {
         
         IoTSensor.SensorType[] sensorTypes = {
             IoTSensor.SensorType.TEMPERATURE,
-            IoTSensor.SensorType.HUMIDITY,
-            IoTSensor.SensorType.PRESSURE,
-            IoTSensor.SensorType.LIGHT,
-            IoTSensor.SensorType.MOTION
+            IoTSensor.SensorType.HUMIDITY
         };
         
         String[] sensorNames = {
             "TEMP_SENSOR_01",
-            "HUMIDITY_SENSOR_01", 
-            "PRESSURE_SENSOR_01",
-            "LIGHT_SENSOR_01",
-            "MOTION_SENSOR_01"
+            "HUMIDITY_SENSOR_01"
         };
         
         for (int i = 0; i < sensorTypes.length; i++) {
@@ -169,27 +185,31 @@ public class IoTDistributedSystem {
             Thread.sleep(1000); // Intervalo entre sensores
         }
         
-        logger.info("🏭 {} sensores IoT criados e iniciados", sensorTypes.length);
+        logger.info("🏭 {} sensores IoT criados e iniciados (TEMPERATURA + UMIDADE)", sensorTypes.length);
     }
     
     /**
-     * Configura monitoramento periódico
+     * Configura monitoramento periódico (Gateway + Data Receivers)
      */
-    private static void setupPeriodicMonitoring(IoTGateway gateway, HeartbeatMonitor monitor) {
+    private static void setupPeriodicMonitoring(IoTGateway gateway, HeartbeatMonitor monitor, 
+                                              DataReceiver receiver1, DataReceiver receiver2) {
         scheduler = Executors.newScheduledThreadPool(2, r -> {
             Thread t = new Thread(r, "Monitor-" + System.nanoTime());
             t.setDaemon(true);
             return t;
         });
         
-        // Estatísticas do Gateway a cada 30 segundos
+        // Estatísticas do Sistema a cada 30 segundos
         scheduler.scheduleWithFixedDelay(() -> {
             try {
-                logger.info("📊 Status do Sistema IoT:");
-                logger.info("   🔸 Sensores registrados: {}", gateway.getRegisteredSensorsCount());
-                logger.info("   🔸 Mensagens processadas: {}", gateway.getTotalMessages());
-                logger.info("   🔸 Gateway ativo: {}", gateway.isActive());
-                logger.info("   🔸 Version Vector: {}", gateway.getGlobalVersionVector());
+                logger.info("📊 Status do Sistema IoT Distribuído:");
+                logger.info("   🔸 Gateway (PROXY): Sensores={}, Receivers={}, Msgs={}", 
+                           gateway.getRegisteredSensorsCount(), gateway.getRegisteredReceiversCount(), gateway.getTotalMessages());
+                logger.info("   🔸 Data Receiver 1: Msgs={}, Sensores={}, Conflitos={}", 
+                           receiver1.getTotalMessages(), receiver1.getSensorCount(), receiver1.getConflictsResolved());
+                logger.info("   🔸 Data Receiver 2: Msgs={}, Sensores={}, Conflitos={}", 
+                           receiver2.getTotalMessages(), receiver2.getSensorCount(), receiver2.getConflictsResolved());
+                logger.info("   🔸 Version Vector Global: {}", gateway.getGlobalVersionVector());
             } catch (Exception e) {
                 logger.error("❌ Erro ao coletar estatísticas: {}", e.getMessage());
             }
@@ -208,9 +228,11 @@ public class IoTDistributedSystem {
         // Estatísticas detalhadas a cada 60 segundos
         scheduler.scheduleWithFixedDelay(() -> {
             try {
-                logger.info("📈 Estatísticas Detalhadas:");
+                logger.info("📈 Estatísticas Detalhadas do Sistema:");
                 logger.info("\n{}", gateway.getDetailedStats());
                 logger.info("\n{}", monitor.getMonitoringStats());
+                logger.info("\n{}", receiver1.getDatabaseStatus());
+                logger.info("\n{}", receiver2.getDatabaseStatus());
             } catch (Exception e) {
                 logger.error("❌ Erro ao coletar estatísticas detalhadas: {}", e.getMessage());
             }

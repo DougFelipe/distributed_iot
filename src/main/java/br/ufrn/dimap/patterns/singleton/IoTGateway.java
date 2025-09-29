@@ -3,7 +3,10 @@ package br.ufrn.dimap.patterns.singleton;
 import br.ufrn.dimap.core.IoTMessage;
 import br.ufrn.dimap.core.IoTSensor;
 import br.ufrn.dimap.patterns.strategy.CommunicationStrategy;
+import br.ufrn.dimap.patterns.strategy.ReceiverStrategy;
+import br.ufrn.dimap.patterns.strategy.RoundRobinReceiverStrategy;
 import br.ufrn.dimap.patterns.observer.IoTObserver;
+import br.ufrn.dimap.components.DataReceiver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,6 +56,10 @@ public class IoTGateway {
     // Version Vector global do sistema
     private final ConcurrentHashMap<String, Long> globalVersionVector;
     
+    // PROXY PATTERN - Lista de Data Receivers (Instâncias B Stateful)
+    private final List<DataReceiver> dataReceivers;
+    private ReceiverStrategy receiverStrategy;
+    
     /**
      * Construtor privado para Singleton
      */
@@ -63,9 +70,11 @@ public class IoTGateway {
         this.totalMessages = new AtomicLong(0);
         this.observers = new ArrayList<>();
         this.globalVersionVector = new ConcurrentHashMap<>();
+        this.dataReceivers = new ArrayList<>();
+        this.receiverStrategy = new RoundRobinReceiverStrategy();
         this.active = false;
         
-        logger.info("🏭 IoT Gateway Singleton criado: {}", gatewayId);
+        logger.info("🏭 IoT Gateway Singleton criado: {} (PROXY para Data Receivers)", gatewayId);
     }
     
     /**
@@ -154,6 +163,38 @@ public class IoTGateway {
     }
     
     /**
+     * Registra um Data Receiver no Gateway (Instância B Stateful)
+     */
+    public synchronized boolean registerDataReceiver(DataReceiver receiver) {
+        if (dataReceivers.contains(receiver)) {
+            logger.warn("⚠️ Data Receiver {} já registrado", receiver.getReceiverId());
+            return false;
+        }
+        
+        dataReceivers.add(receiver);
+        logger.info("✅ Data Receiver registrado: {} na porta {} (Total: {})", 
+                   receiver.getReceiverId(), receiver.getPort(), dataReceivers.size());
+        
+        // Notificar observers
+        notifyObservers("RECEIVER_REGISTERED", receiver);
+        
+        return true;
+    }
+    
+    /**
+     * Remove Data Receiver
+     */
+    public synchronized boolean unregisterDataReceiver(DataReceiver receiver) {
+        boolean removed = dataReceivers.remove(receiver);
+        if (removed) {
+            logger.info("🗑️ Data Receiver removido: {} (Total: {})", 
+                       receiver.getReceiverId(), dataReceivers.size());
+            notifyObservers("RECEIVER_UNREGISTERED", receiver);
+        }
+        return removed;
+    }
+    
+    /**
      * Remove sensor do registry
      */
     public void unregisterSensor(String sensorId) {
@@ -191,26 +232,64 @@ public class IoTGateway {
     }
     
     /**
-     * Processa mensagem recebida de sensor
+     * PROXY PATTERN - Roteia mensagem para Data Receivers (Instâncias B)
+     * Gateway NÃO processa dados diretamente - apenas roteia
      */
-    public void processIncomingMessage(IoTMessage message, String senderHost, int senderPort) {
+    public void routeToDataReceiver(IoTMessage message, String senderHost, int senderPort) {
         totalMessages.incrementAndGet();
         
-        // Atualizar heartbeat
+        // Atualizar heartbeat do sensor
         if (message.getSenderId() != null) {
             lastHeartbeat.put(message.getSenderId(), LocalDateTime.now());
         }
         
-        // Atualizar Version Vector global
-        updateVersionVector(message);
+        logger.info("🔄 [PROXY] Mensagem recebida de {}:{} - Sensor: {} - Tipo: {} - Roteando para Data Receiver...", 
+                   senderHost, senderPort, message.getSensorId(), message.getType());
         
-        logger.debug("📨 Mensagem processada de {}:{} - Tipo: {} [Código: {}] - ID: {} - Sensor: {} - Valor: {} {} - Total Msgs: {}", 
-                    senderHost, senderPort, message.getType(), message.getType().getCode(),
-                    message.getMessageId(), message.getSensorId(), message.getSensorValue(), 
-                    message.getSensorType(), totalMessages.get());
+        // STRATEGY PATTERN - Selecionar Data Receiver
+        DataReceiver selectedReceiver = receiverStrategy.selectReceiver(message, dataReceivers);
         
-        // Notificar observers
-        notifyObservers("MESSAGE_RECEIVED", message);
+        if (selectedReceiver == null) {
+            logger.error("❌ [PROXY] ERRO: Nenhum Data Receiver disponível para mensagem {}", message.getMessageId());
+            return;
+        }
+        
+        // Rotear para o Data Receiver selecionado
+        boolean success = routeMessageToDataReceiver(message, selectedReceiver);
+        
+        if (success) {
+            logger.info("✅ [PROXY] Mensagem {} roteada para {} - Sensor: {} Valor: {:.2f}", 
+                       message.getMessageId(), selectedReceiver.getReceiverId(), 
+                       message.getSensorId(), message.getSensorValue());
+        } else {
+            logger.error("❌ [PROXY] Falha ao rotear mensagem {} para {}", 
+                        message.getMessageId(), selectedReceiver.getReceiverId());
+            
+            // Tratar falha do receptor
+            receiverStrategy.handleReceiverFailure(selectedReceiver, dataReceivers);
+        }
+        
+        // Notificar observers sobre roteamento
+        notifyObservers("MESSAGE_ROUTED", message);  
+    }
+    
+    /**
+     * Roteia mensagem para Data Receiver específico via UDP
+     */
+    private boolean routeMessageToDataReceiver(IoTMessage message, DataReceiver receiver) {
+        try {
+            if (!receiver.isRunning()) {
+                logger.warn("⚠️ [PROXY] Data Receiver {} não está ativo", receiver.getReceiverId());
+                return false;
+            }
+            
+            // Enviar via UDP para o Data Receiver
+            return communicationStrategy.sendMessage(message, "localhost", receiver.getPort());
+            
+        } catch (Exception e) {
+            logger.error("❌ [PROXY] Erro ao rotear para {}: {}", receiver.getReceiverId(), e.getMessage());
+            return false;
+        }
     }
     
     /**
@@ -262,27 +341,40 @@ public class IoTGateway {
     // Getters para estatísticas
     public String getGatewayId() { return gatewayId; }
     public int getRegisteredSensorsCount() { return registeredSensors.size(); }
+    public int getRegisteredReceiversCount() { return dataReceivers.size(); }
     public long getTotalMessages() { return totalMessages.get(); }
     public boolean isActive() { return active; }
     public ConcurrentHashMap<String, Long> getGlobalVersionVector() { return new ConcurrentHashMap<>(globalVersionVector); }
+    public List<DataReceiver> getDataReceivers() { return new ArrayList<>(dataReceivers); }
     
     /**
-     * Estatísticas detalhadas do Gateway
+     * Estatísticas detalhadas do Gateway (PROXY)
      */
     public String getDetailedStats() {
-        return String.format(
-            "IoT Gateway Singleton Stats:\n" +
-            "  Gateway ID: %s\n" +
-            "  Active: %s\n" +
-            "  Protocol: %s\n" +
-            "  Registered Sensors: %d\n" +
-            "  Total Messages: %d\n" +
-            "  Observers: %d\n" +
-            "  Version Vector: %s",
-            gatewayId, active, 
-            communicationStrategy != null ? communicationStrategy.getProtocolName() : "NONE",
-            registeredSensors.size(), totalMessages.get(), observers.size(),
-            globalVersionVector.toString()
-        );
+        StringBuilder sb = new StringBuilder();
+        sb.append("IoT Gateway Singleton Stats (PROXY PATTERN):\n");
+        sb.append(String.format("  Gateway ID: %s\n", gatewayId));
+        sb.append(String.format("  Active: %s\n", active));
+        sb.append(String.format("  Protocol: %s\n", communicationStrategy != null ? communicationStrategy.getProtocolName() : "NONE"));
+        sb.append(String.format("  Strategy: %s\n", receiverStrategy.getStrategyName()));
+        sb.append(String.format("  Registered Sensors: %d\n", registeredSensors.size()));
+        sb.append(String.format("  Data Receivers: %d\n", dataReceivers.size()));
+        sb.append(String.format("  Total Messages: %d\n", totalMessages.get()));
+        sb.append(String.format("  Observers: %d\n", observers.size()));
+        sb.append(String.format("  Version Vector: %s\n", globalVersionVector.toString()));
+        
+        // Status dos Data Receivers
+        if (!dataReceivers.isEmpty()) {
+            sb.append("  Data Receivers Status:\n");
+            for (DataReceiver receiver : dataReceivers) {
+                sb.append(String.format("    %s: %s (Port: %d, Messages: %d)\n", 
+                         receiver.getReceiverId(), 
+                         receiver.isRunning() ? "ACTIVE" : "INACTIVE",
+                         receiver.getPort(),
+                         receiver.getTotalMessages()));
+            }
+        }
+        
+        return sb.toString();
     }
 }

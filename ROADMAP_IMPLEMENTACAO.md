@@ -30,29 +30,35 @@
 - **Replicação obrigatória** para componentes stateful
 
 ### Componentes Principais Reimplementados:
-1. **API Gateway IoT** (Singleton - Obrigatório)
-   - Ponto único de entrada para requisições do JMeter
-   - Coordenador central do sistema IoT distribuído
-   - Registro e descoberta dinâmica de sensores IoT
-   - Proxy para roteamento de requisições aos sensores
-   - Monitoramento via Heartbeat de todos os sensores
-   - Manutenção do Version Vector global do sistema
 
-2. **IoT Sensor Manager** (Observer Subject)
-   - Gerenciamento centralizado de sensores distribuídos
-   - Implementação do padrão Observer para monitoramento
-   - Notificação de mudanças de status dos sensores
-   - Coordenação da coleta de dados distribuída
-   - Replicação de estado crítico dos sensores
+#### **INSTÂNCIAS A - Sensores IoT (Stateless)** ✅ IMPLEMENTADO
+1. **Sensor de Temperatura** (`TEMP_SENSOR_01`)
+2. **Sensor de Umidade** (`HUMIDITY_SENSOR_01`) 
+3. **Sensor de Pressão** (`PRESSURE_SENSOR_01`)
+4. **Sensor de Luminosidade** (`LIGHT_SENSOR_01`)
+5. **Sensor de Movimento** (`MOTION_SENSOR_01`)
+   - **Implementação:** `NativeUDPIoTClient` + `IoTSensor`
+   - **Função:** Produtores de dados IoT (Stateless)
+   - **Comunicação:** UDP nativo para Gateway
 
-3. **IoT Sensors Distribuídos** (Múltiplas Instâncias)
-   - **Sensor de Temperatura** (Instâncias 1-N)
-   - **Sensor de Umidade** (Instâncias 1-N)  
-   - **Sensor de Pressão** (Instâncias 1-N)
-   - **Sensor de Luminosidade** (Instâncias 1-N)
-   - **Sensor de Movimento** (Instâncias 1-N)
-   - Cada sensor mantém Version Vector individual
-   - Comunicação distribuída com coordenador central
+#### **PROXY CENTRAL - API Gateway IoT** ✅ IMPLEMENTADO (NECESSITA AJUSTES)
+- **Implementação:** `IoTGateway` (Singleton Pattern)
+- **Função Atual:** Receptor final de dados ❌
+- **Função Correta:** Proxy/Router para Data Receivers ✅
+- **Ajustes Necessários:**
+  - Rotear mensagens para Data Receivers
+  - Load balancing entre receptores
+  - Manter apenas registro (não processar dados)
+
+#### **INSTÂNCIAS B - Data Receivers (Stateful)** ❌ FALTANDO
+1. **Data Receiver 1** (Replicação Primária)
+2. **Data Receiver 2** (Replicação Secundária)
+   - **Função:** Receptores com persistência (Stateful) 
+   - **Responsabilidades:**
+     - Armazenamento persistente de dados dos sensores
+     - Version Vector distribuído entre receptores
+     - Replicação de estado entre instâncias
+     - Tolerância a falhas com recuperação automática
 
 ### Protocolos de Comunicação Suportados:
 - **UDP Nativo:** ✅ Implementado e funcional (serialização Java)
@@ -77,15 +83,22 @@
 - Implementação baseada em "Patterns of Distributed Systems" (Addison-Wesley, 2024)
 - **Tolerância a Falhas:** Sistema deve ser resiliente a falhas de rede/componentes
 
-### Fluxo de Execução IoT Distribuído:
-1. **API Gateway IoT** inicializa como Singleton (coordenador único)
-2. **Sensores IoT** se registram dinamicamente no Gateway (Service Discovery)
-3. **JMeter** envia requisições para o **API Gateway** via HTTP
-4. **Gateway** atua como **Proxy**, roteando requisições aos sensores via Strategy Pattern
-5. **Sensores** enviam dados periodicamente com **Version Vector** atualizado
-6. **Observer Pattern:** Gateway monitora heartbeat e notifica mudanças de status
-7. **Version Vector Global** mantém ordenação causal de todos os eventos IoT
-8. **Tolerância a Falhas:** Detecção automática e recuperação de sensores falhos
+### Fluxo de Execução IoT Distribuído (CORRIGIDO):
+1. **API Gateway IoT** inicializa como Singleton (proxy único)
+2. **Data Receivers** se registram no Gateway (Service Discovery)
+3. **Sensores IoT** se registram dinamicamente no Gateway
+4. **JMeter/Sensores** enviam dados para o **API Gateway** via UDP
+5. **Gateway** atua como **Proxy**, roteando dados aos **Data Receivers** via Strategy Pattern
+6. **Data Receivers** processam e persistem dados com **Version Vector** distribuído
+7. **Observer Pattern:** Gateway monitora heartbeat de sensores e receptores
+8. **Replicação:** Data Receivers sincronizam estado entre si
+9. **Tolerância a Falhas:** Detecção automática e recuperação de receptores falhos
+
+### Arquitetura Correta:
+```
+Sensores (A) → Gateway (Proxy) → Data Receivers (B)
+  Stateless        Router          Stateful
+```
 
 ### Critérios de Avaliação:
 - **Implementação dos protocolos:** UDP (1,50), TCP com HTTP (1,50), gRPC (3,00) - Total: 6,00 pontos
