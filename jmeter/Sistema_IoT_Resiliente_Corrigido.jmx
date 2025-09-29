@@ -75,7 +75,7 @@
           <stringProp name="ConstantTimer.delay">100</stringProp>
         </ConstantTimer>
         <hashTree/>
-        <kg.apc.jmeter.samplers.UDPSampler guiclass="kg.apc.jmeter.samplers.UDPSamplerGui" testclass="kg.apc.jmeter.samplers.UDPSampler" testname="📊 Envio Dados IoT" enabled="true">
+        <kg.apc.jmeter.samplers.UDPSampler guiclass="kg.apc.jmeter.samplers.UDPSamplerGui" testclass="kg.apc.jmeter.samplers.UDPSampler" testname="📊 Envio Dados IoT">
           <stringProp name="hostname">localhost</stringProp>
           <stringProp name="port">9090</stringProp>
           <stringProp name="data">SENSOR_DATA|SENSOR_${__threadNum}_${__Random(1,999)}|TEMPERATURE|Lab-DIMAP-${__threadNum}|${__time()}|${__Random(15,40)}.${__Random(0,9)}</stringProp>
@@ -101,7 +101,7 @@
           </ResponseAssertion>
           <hashTree/>
         </hashTree>
-        <kg.apc.jmeter.samplers.UDPSampler guiclass="kg.apc.jmeter.samplers.UDPSamplerGui" testclass="kg.apc.jmeter.samplers.UDPSampler" testname="💧 Envio Dados Umidade" enabled="true">
+        <kg.apc.jmeter.samplers.UDPSampler guiclass="kg.apc.jmeter.samplers.UDPSamplerGui" testclass="kg.apc.jmeter.samplers.UDPSampler" testname="💧 Envio Dados Umidade">
           <stringProp name="hostname">localhost</stringProp>
           <stringProp name="port">9090</stringProp>
           <stringProp name="data">SENSOR_DATA|SENSOR_${__threadNum}_${__Random(1,999)}|HUMIDITY|Lab-DIMAP-${__threadNum}|${__time()}|${__Random(45,85)}.${__Random(0,9)}</stringProp>
@@ -255,7 +255,7 @@
         </kg.apc.jmeter.vizualizers.CorrectedResultCollector>
         <hashTree/>
       </hashTree>
-      <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="📈 Summary Report" enabled="true">
+      <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="📈 Summary Report">
         <boolProp name="ResultCollector.error_logging">false</boolProp>
         <objProp>
           <name>saveConfig</name>
@@ -292,7 +292,7 @@
         <stringProp name="filename">jmeter/results/summary_final.jtl</stringProp>
       </ResultCollector>
       <hashTree/>
-      <ResultCollector guiclass="StatVisualizer" testclass="ResultCollector" testname="📊 Aggregate Report" enabled="true">
+      <ResultCollector guiclass="StatVisualizer" testclass="ResultCollector" testname="📊 Aggregate Report">
         <boolProp name="ResultCollector.error_logging">false</boolProp>
         <objProp>
           <name>saveConfig</name>
@@ -329,7 +329,7 @@
         <stringProp name="filename">jmeter/results/aggregate_final.jtl</stringProp>
       </ResultCollector>
       <hashTree/>
-      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="🔍 View Results Tree" enabled="true">
+      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="🔍 View Results Tree">
         <boolProp name="ResultCollector.error_logging">false</boolProp>
         <objProp>
           <name>saveConfig</name>

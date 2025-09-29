@@ -1,6 +1,8 @@
 # Initial documentation folder
 initial_docs/
-
+exemplo_udp/
+exemplo_http/
+exemplo_tcp/
 # Compiled class file
 *.class
 
