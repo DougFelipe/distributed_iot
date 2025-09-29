@@ -2,6 +2,8 @@ package br.ufrn.dimap.applications;
 
 import br.ufrn.dimap.patterns.singleton.IoTGateway;
 import br.ufrn.dimap.patterns.strategy.UDPCommunicationStrategy;
+import br.ufrn.dimap.communication.http.HTTPCommunicationStrategy;
+import br.ufrn.dimap.communication.tcp.TCPCommunicationStrategy;
 import br.ufrn.dimap.patterns.observer.HeartbeatMonitor;
 import br.ufrn.dimap.patterns.fault_tolerance.FaultToleranceManager;
 import br.ufrn.dimap.components.DataReceiver;
@@ -69,24 +71,10 @@ public class IoTDistributedSystem {
             gateway = IoTGateway.getInstance();
             logger.info("✅ Singleton Pattern: Gateway IoT obtido");
             
-            // 2. STRATEGY PATTERN - Configurar estratégia UDP
-            UDPCommunicationStrategy udpStrategy = new UDPCommunicationStrategy();
-            
-            // Configurar callback para roteamento (PROXY PATTERN)
-            udpStrategy.setMessageProcessor((message, host, port) -> {
-                // PROXY PATTERN - Gateway roteia mensagens para Data Receivers
-                boolean success = gateway.routeToDataReceiver(message, host, port);
-                
-                // Enviar resposta UDP para JMeter (importante para zero erros)
-                if (success) {
-                    udpStrategy.sendSuccessResponse(message, host, port);
-                } else {
-                    udpStrategy.sendErrorResponse(message, host, port, "No available receivers");
-                }
-            });
-            
-            gateway.setCommunicationStrategy(udpStrategy);
-            logger.info("✅ Strategy Pattern: UDP configurado como protocolo");
+            // 2. STRATEGY PATTERN - Configurar estratégia baseada em parâmetros
+            String protocol = getProtocolFromArgs(args);
+            configureCommunicationStrategy(gateway, protocol);
+            logger.info("✅ Strategy Pattern: Protocolo {} configurado", protocol);
             
             // 3. OBSERVER PATTERN - Configurar monitor de heartbeat
             HeartbeatMonitor heartbeatMonitor = new HeartbeatMonitor(HEARTBEAT_TIMEOUT);
@@ -94,8 +82,9 @@ public class IoTDistributedSystem {
             logger.info("✅ Observer Pattern: HeartbeatMonitor adicionado");
             
             // 4. Iniciar o Gateway (Singleton + Strategy)
-            gateway.start(GATEWAY_PORT);
-            logger.info("✅ Gateway IoT iniciado na porta {}", GATEWAY_PORT);
+            int gatewayPort = getProtocolPort(protocol);
+            gateway.start(gatewayPort);
+            logger.info("✅ Gateway IoT iniciado na porta {}", gatewayPort);
             
             // 5. INSTÂNCIAS B - Criar e iniciar Data Receivers (Stateful)
             logger.info("🏗️ Criando Data Receivers (Instâncias B Stateful)...");
@@ -320,5 +309,161 @@ public class IoTDistributedSystem {
         
         logger.info("🏁 Sistema IoT Distribuído encerrado com sucesso!");
         logger.info("📊 Sprint 2 - Padrões GoF implementados e validados!");
+    }
+    
+    /**
+     * Obtém o protocolo de comunicação dos argumentos da linha de comando.
+     * Suporta: UDP (padrão), HTTP, TCP
+     * 
+     * Uso: java -jar app.jar --protocol=HTTP
+     *      java -jar app.jar UDP
+     *      java -jar app.jar HTTP
+     *      java -jar app.jar TCP
+     */
+    private static String getProtocolFromArgs(String[] args) {
+        // Verificar propriedade do sistema primeiro
+        String systemProtocol = System.getProperty("iot.protocol");
+        if (systemProtocol != null && !systemProtocol.trim().isEmpty()) {
+            logger.info("🔧 Protocolo definido via system property: {}", systemProtocol);
+            return systemProtocol.toUpperCase().trim();
+        }
+        
+        // Verificar argumentos da linha de comando
+        for (String arg : args) {
+            if (arg.startsWith("--protocol=")) {
+                String protocol = arg.substring(11).toUpperCase().trim();
+                logger.info("🔧 Protocolo definido via argumento --protocol: {}", protocol);
+                return protocol;
+            } else if (arg.matches("(?i)(UDP|HTTP|TCP)")) {
+                String protocol = arg.toUpperCase().trim();
+                logger.info("🔧 Protocolo definido via argumento: {}", protocol);
+                return protocol;
+            }
+        }
+        
+        // Ler do application.properties como fallback
+        String propProtocol = readProtocolFromProperties();
+        if (propProtocol != null && !propProtocol.trim().isEmpty()) {
+            logger.info("🔧 Protocolo definido via application.properties: {}", propProtocol);
+            return propProtocol.toUpperCase().trim();
+        }
+        
+        // Padrão é UDP para compatibilidade
+        logger.info("🔧 Usando protocolo padrão: UDP");
+        return "UDP";
+    }
+    
+    /**
+     * Lê o protocolo do arquivo application.properties.
+     */
+    private static String readProtocolFromProperties() {
+        try {
+            java.util.Properties props = new java.util.Properties();
+            java.io.InputStream input = IoTDistributedSystem.class.getClassLoader()
+                    .getResourceAsStream("application.properties");
+            
+            if (input != null) {
+                props.load(input);
+                return props.getProperty("iot.protocol");
+            }
+        } catch (Exception e) {
+            logger.warn("⚠️ Erro ao ler application.properties: {}", e.getMessage());
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Obtém a porta padrão para cada protocolo.
+     */
+    private static int getProtocolPort(String protocol) {
+        switch (protocol) {
+            case "UDP":
+                return Integer.parseInt(System.getProperty("iot.udp.port", String.valueOf(GATEWAY_PORT)));
+            case "HTTP":
+                return Integer.parseInt(System.getProperty("iot.http.port", "8081"));
+            case "TCP":
+                return Integer.parseInt(System.getProperty("iot.tcp.port", "8082"));
+            default:
+                return GATEWAY_PORT;
+        }
+    }
+    
+    /**
+     * Configura a estratégia de comunicação baseada no protocolo especificado.
+     */
+    private static void configureCommunicationStrategy(IoTGateway gateway, String protocol) {
+        logger.info("🔧 Configurando estratégia de comunicação: {}", protocol);
+        
+        switch (protocol) {
+            case "UDP":
+                configureUDPStrategy(gateway);
+                break;
+                
+            case "HTTP":
+                configureHTTPStrategy(gateway);
+                break;
+                
+            case "TCP":
+                configureTCPStrategy(gateway);
+                break;
+                
+            default:
+                logger.warn("⚠️ Protocolo '{}' não reconhecido. Usando UDP como padrão.", protocol);
+                configureUDPStrategy(gateway);
+                break;
+        }
+    }
+    
+    /**
+     * Configura estratégia UDP (implementação original).
+     */
+    private static void configureUDPStrategy(IoTGateway gateway) {
+        UDPCommunicationStrategy udpStrategy = new UDPCommunicationStrategy();
+        
+        // Configurar callback para roteamento (PROXY PATTERN)
+        udpStrategy.setMessageProcessor((message, host, port) -> {
+            // PROXY PATTERN - Gateway roteia mensagens para Data Receivers
+            boolean success = gateway.routeToDataReceiver(message, host, port);
+            
+            // Enviar resposta UDP para JMeter (importante para zero erros)
+            if (success) {
+                udpStrategy.sendSuccessResponse(message, host, port);
+            } else {
+                udpStrategy.sendErrorResponse(message, host, port, "No available receivers");
+            }
+        });
+        
+        gateway.setCommunicationStrategy(udpStrategy);
+        logger.info("✅ Estratégia UDP configurada com callback de roteamento");
+    }
+    
+    /**
+     * Configura estratégia HTTP.
+     */
+    private static void configureHTTPStrategy(IoTGateway gateway) {
+        int httpPort = Integer.parseInt(System.getProperty("iot.http.port", "8081"));
+        HTTPCommunicationStrategy httpStrategy = new HTTPCommunicationStrategy();
+        
+        gateway.setCommunicationStrategy(httpStrategy);
+        
+        logger.info("✅ Estratégia HTTP configurada na porta {}", httpPort);
+        logger.info("🌐 Endpoints HTTP disponíveis:");
+        logger.info("   POST /sensor/data - Envio de dados de sensores");
+        logger.info("   GET  /sensor/status - Status do sistema");
+        logger.info("   GET  /health - Health check");
+    }
+    
+    /**
+     * Configura estratégia TCP.
+     */
+    private static void configureTCPStrategy(IoTGateway gateway) {
+        int tcpPort = Integer.parseInt(System.getProperty("iot.tcp.port", "8082"));
+        TCPCommunicationStrategy tcpStrategy = new TCPCommunicationStrategy(tcpPort);
+        
+        gateway.setCommunicationStrategy(tcpStrategy);
+        logger.info("✅ Estratégia TCP configurada na porta {}", tcpPort);
+        logger.info("🔌 Servidor TCP aguardando conexões persistentes");
+        logger.info("📝 Formato de mensagem: SENSOR_DATA|sensor_id|type|location|timestamp|value");
     }
 }
