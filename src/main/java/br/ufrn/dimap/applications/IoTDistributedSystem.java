@@ -3,6 +3,7 @@ package br.ufrn.dimap.applications;
 import br.ufrn.dimap.patterns.singleton.IoTGateway;
 import br.ufrn.dimap.patterns.strategy.UDPCommunicationStrategy;
 import br.ufrn.dimap.patterns.observer.HeartbeatMonitor;
+import br.ufrn.dimap.patterns.fault_tolerance.FaultToleranceManager;
 import br.ufrn.dimap.components.DataReceiver;
 
 import br.ufrn.dimap.core.IoTSensor;
@@ -49,6 +50,9 @@ public class IoTDistributedSystem {
     
     private static volatile boolean running = true;
     private static ScheduledExecutorService scheduler;
+    private static IoTGateway gateway;
+    private static DataReceiver receiver1;
+    private static DataReceiver receiver2;
     
     public static void main(String[] args) {
         // Configurar shutdown hook
@@ -62,7 +66,7 @@ public class IoTDistributedSystem {
         
         try {
             // 1. SINGLETON PATTERN - Obter instância única do Gateway
-            IoTGateway gateway = IoTGateway.getInstance();
+            gateway = IoTGateway.getInstance();
             logger.info("✅ Singleton Pattern: Gateway IoT obtido");
             
             // 2. STRATEGY PATTERN - Configurar estratégia UDP
@@ -71,7 +75,14 @@ public class IoTDistributedSystem {
             // Configurar callback para roteamento (PROXY PATTERN)
             udpStrategy.setMessageProcessor((message, host, port) -> {
                 // PROXY PATTERN - Gateway roteia mensagens para Data Receivers
-                gateway.routeToDataReceiver(message, host, port);
+                boolean success = gateway.routeToDataReceiver(message, host, port);
+                
+                // Enviar resposta UDP para JMeter (importante para zero erros)
+                if (success) {
+                    udpStrategy.sendSuccessResponse(message, host, port);
+                } else {
+                    udpStrategy.sendErrorResponse(message, host, port, "No available receivers");
+                }
             });
             
             gateway.setCommunicationStrategy(udpStrategy);
@@ -88,8 +99,8 @@ public class IoTDistributedSystem {
             
             // 5. INSTÂNCIAS B - Criar e iniciar Data Receivers (Stateful)
             logger.info("🏗️ Criando Data Receivers (Instâncias B Stateful)...");
-            DataReceiver receiver1 = new DataReceiver("DATA_RECEIVER_1", DATA_RECEIVER_1_PORT);
-            DataReceiver receiver2 = new DataReceiver("DATA_RECEIVER_2", DATA_RECEIVER_2_PORT);
+            receiver1 = new DataReceiver("DATA_RECEIVER_1", DATA_RECEIVER_1_PORT);
+            receiver2 = new DataReceiver("DATA_RECEIVER_2", DATA_RECEIVER_2_PORT);
             
             // Iniciar Data Receivers
             receiver1.start();
@@ -104,22 +115,38 @@ public class IoTDistributedSystem {
             // 6. Aguardar inicialização
             Thread.sleep(2000);
             
-            // 7. Configurar monitoramento periódico
-            setupPeriodicMonitoring(gateway, heartbeatMonitor, receiver1, receiver2);
+            // 7. TOLERÂNCIA A FALHAS - Iniciar gerenciador de falhas
+            logger.info("🛡️ Iniciando Fault Tolerance Manager...");
+            FaultToleranceManager faultManager = new FaultToleranceManager(gateway);
+            faultManager.start();
+            logger.info("✅ Tolerância a falhas ativada com recuperação automática");
+            
+            // 8. Configurar monitoramento periódico
+            setupPeriodicMonitoring(gateway, heartbeatMonitor, receiver1, receiver2, faultManager);
             
             // NOTA: Sensores serão criados dinamicamente via JMeter
             // Cada thread do JMeter = 1 sensor IoT simulado
             
             logger.info("✅ Sistema IoT Distribuído iniciado com sucesso!");
-            logger.info("📊 Arquitetura Correta Implementada:");
-            logger.info("   🔸 Instâncias A: Sensores IoT (Stateless) - Apenas TEMPERATURA e UMIDADE");
-            logger.info("   🔸 Instâncias B: Data Receivers (Stateful) - 2 receptores com persistência");
+            logger.info("📊 Arquitetura Final Implementada:");
+            logger.info("   🔸 Instâncias A: Sensores IoT (Stateless) - TEMPERATURA e UMIDADE");
+            logger.info("   🔸 Instâncias B: Data Receivers (Stateful) - 2+ receptores com persistência");
             logger.info("   🔸 Gateway: Proxy roteando mensagens para Data Receivers");
-            logger.info("📊 Padrões GoF implementados:");
+            logger.info("   � Tolerância a Falhas: Recuperação automática e monitoramento");
+            logger.info("�📊 Padrões GoF implementados:");
             logger.info("   🔸 Singleton: Gateway como proxy único");
             logger.info("   🔸 Strategy: Seleção Round Robin de Data Receivers");
             logger.info("   🔸 Observer: Monitoramento de heartbeat");
             logger.info("   🔸 Proxy: Gateway roteia para Data Receivers");
+            logger.info("🛡️ Recursos de Tolerância a Falhas:");
+            logger.info("   🔸 Health Check automático a cada 5s");
+            logger.info("   🔸 Recuperação automática de instâncias falhas");
+            logger.info("   🔸 Criação automática de backup receivers");
+            logger.info("   🔸 Balanceamento de carga Round Robin");
+            logger.info("🧪 PRONTO PARA TESTES JMETER:");
+            logger.info("   🔸 Zero erros em operação normal");
+            logger.info("   🔸 Aumento de erros ao desligar instâncias");
+            logger.info("   🔸 Diminuição de erros na recuperação");
             logger.info("🔄 Sistema executando. Use Ctrl+C para parar.");
             
             // Loop principal
@@ -189,10 +216,11 @@ public class IoTDistributedSystem {
     }
     
     /**
-     * Configura monitoramento periódico (Gateway + Data Receivers)
+     * Configura monitoramento periódico (Gateway + Data Receivers + Fault Tolerance)
      */
     private static void setupPeriodicMonitoring(IoTGateway gateway, HeartbeatMonitor monitor, 
-                                              DataReceiver receiver1, DataReceiver receiver2) {
+                                              DataReceiver receiver1, DataReceiver receiver2,
+                                              FaultToleranceManager faultManager) {
         scheduler = Executors.newScheduledThreadPool(2, r -> {
             Thread t = new Thread(r, "Monitor-" + System.nanoTime());
             t.setDaemon(true);
@@ -224,6 +252,27 @@ public class IoTDistributedSystem {
                 logger.error("❌ Erro na verificação de heartbeat: {}", e.getMessage());
             }
         }, 15, 15, TimeUnit.SECONDS);
+        
+        // Health check dos Data Receivers a cada 20 segundos
+        scheduler.scheduleWithFixedDelay(() -> {
+            try {
+                gateway.performHealthCheck();
+            } catch (Exception e) {
+                logger.error("❌ Erro no health check: {}", e.getMessage());
+            }
+        }, 20, 20, TimeUnit.SECONDS);
+        
+        // Sistema de Tolerância a Falhas com estatísticas a cada 30 segundos
+        scheduler.scheduleWithFixedDelay(() -> {
+            try {
+                if (faultManager.isActive()) {
+                    logger.info("🛡️ Tolerância a Falhas: Ativo - Backups disponíveis: {}", 
+                              faultManager.getBackupConfigsAvailable());
+                }
+            } catch (Exception e) {
+                logger.error("❌ Erro no sistema de tolerância a falhas: {}", e.getMessage());
+            }
+        }, 30, 30, TimeUnit.SECONDS);
         
         // Estatísticas detalhadas a cada 60 segundos
         scheduler.scheduleWithFixedDelay(() -> {

@@ -305,6 +305,64 @@ public class UDPCommunicationStrategy implements CommunicationStrategy {
     }
     
     /**
+     * Envia resposta de sucesso para JMeter (importante para zero erros)
+     */
+    public boolean sendSuccessResponse(IoTMessage originalMessage, String clientHost, int clientPort) {
+        try {
+            String response = String.format("SUCCESS|%s|%s|PROCESSED", 
+                                           originalMessage.getMessageId(), 
+                                           originalMessage.getSensorId());
+            
+            return sendTextResponse(response, clientHost, clientPort);
+            
+        } catch (Exception e) {
+            logger.error("❌ Erro ao enviar resposta de sucesso: {}", e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Envia resposta de erro para JMeter
+     */
+    public boolean sendErrorResponse(IoTMessage originalMessage, String clientHost, int clientPort, String errorMessage) {
+        try {
+            String response = String.format("ERROR|%s|%s|%s", 
+                                           originalMessage.getMessageId(), 
+                                           originalMessage.getSensorId(),
+                                           errorMessage);
+            
+            return sendTextResponse(response, clientHost, clientPort);
+            
+        } catch (Exception e) {
+            logger.error("❌ Erro ao enviar resposta de erro: {}", e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Envia resposta texto via UDP
+     */
+    private boolean sendTextResponse(String response, String clientHost, int clientPort) {
+        try (DatagramSocket responseSocket = new DatagramSocket()) {
+            byte[] responseData = response.getBytes("UTF-8");
+            InetAddress clientAddress = InetAddress.getByName(clientHost);
+            
+            DatagramPacket responsePacket = new DatagramPacket(
+                responseData, responseData.length, clientAddress, clientPort
+            );
+            
+            responseSocket.send(responsePacket);
+            
+            logger.debug("📤 Resposta UDP enviada para {}:{} - {}", clientHost, clientPort, response);
+            return true;
+            
+        } catch (Exception e) {
+            logger.error("❌ Erro ao enviar resposta UDP: {}", e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
      * Retorna estatísticas do servidor UDP
      */
     public String getStats() {

@@ -331,6 +331,101 @@ new ConcurrentHashMap<String, Integer>() {{
                    receiverId, totalMessages.get(), sensorDatabase.size(), conflictsResolved.get());
     }
     
+    /**
+     * Simula falha do Data Receiver (para testes de tolerância a falhas)
+     */
+    public void simulateFailure() {
+        logger.warn("💥 [{}] SIMULANDO FALHA - Data Receiver será desconectado temporariamente", receiverId);
+        stop();
+    }
+    
+    /**
+     * Recupera Data Receiver após falha
+     */
+    public void recover() throws SocketException {
+        if (!running.get()) {
+            logger.info("🔄 [{}] RECUPERANDO - Reiniciando Data Receiver após falha", receiverId);
+            start();
+            logger.info("💚 [{}] RECUPERAÇÃO COMPLETA - Data Receiver operacional novamente", receiverId);
+        }
+    }
+    
+    /**
+     * Verifica se o Data Receiver está saudável
+     */
+    public boolean isHealthy() {
+        return running.get() && serverSocket != null && !serverSocket.isClosed();
+    }
+    
+    /**
+     * Cria um backup do estado atual para replicação
+     */
+    public DataReceiverBackup createBackup() {
+        return new DataReceiverBackup(
+            receiverId, 
+            new ConcurrentHashMap<>(sensorDatabase),
+            new ConcurrentHashMap<>(versionVector),
+            totalMessages.get(),
+            conflictsResolved.get()
+        );
+    }
+    
+    /**
+     * Restaura estado a partir de backup (replicação)
+     */
+    public void restoreFromBackup(DataReceiverBackup backup) {
+        logger.info("📥 [{}] RESTAURANDO dados do backup - {} sensores, {} mensagens", 
+                   receiverId, backup.getSensorDatabase().size(), backup.getTotalMessages());
+        
+        // Restaurar dados apenas se o backup for mais recente
+        if (backup.getTotalMessages() > totalMessages.get()) {
+            sensorDatabase.clear();
+            sensorDatabase.putAll(backup.getSensorDatabase());
+            
+            versionVector.clear();
+            versionVector.putAll(backup.getVersionVector());
+            
+            totalMessages.set(backup.getTotalMessages());
+            conflictsResolved.set(backup.getConflictsResolved());
+            
+            logger.info("✅ [{}] BACKUP RESTAURADO com sucesso", receiverId);
+        } else {
+            logger.info("⚠️ [{}] Backup mais antigo ignorado", receiverId);
+        }
+    }
+    
+    /**
+     * Classe para backup do estado do Data Receiver
+     */
+    public static class DataReceiverBackup implements Serializable {
+        private final String receiverId;
+        private final ConcurrentHashMap<String, SensorDataEntry> sensorDatabase;
+        private final ConcurrentHashMap<String, Long> versionVector;
+        private final long totalMessages;
+        private final long conflictsResolved;
+        private final LocalDateTime backupTime;
+        
+        public DataReceiverBackup(String receiverId, 
+                                 ConcurrentHashMap<String, SensorDataEntry> sensorDatabase,
+                                 ConcurrentHashMap<String, Long> versionVector,
+                                 long totalMessages, long conflictsResolved) {
+            this.receiverId = receiverId;
+            this.sensorDatabase = sensorDatabase;
+            this.versionVector = versionVector;
+            this.totalMessages = totalMessages;
+            this.conflictsResolved = conflictsResolved;
+            this.backupTime = LocalDateTime.now();
+        }
+        
+        // Getters
+        public String getReceiverId() { return receiverId; }
+        public ConcurrentHashMap<String, SensorDataEntry> getSensorDatabase() { return sensorDatabase; }
+        public ConcurrentHashMap<String, Long> getVersionVector() { return versionVector; }
+        public long getTotalMessages() { return totalMessages; }
+        public long getConflictsResolved() { return conflictsResolved; }
+        public LocalDateTime getBackupTime() { return backupTime; }
+    }
+    
     // Getters para monitoramento
     public String getReceiverId() { return receiverId; }
     public int getPort() { return port; }

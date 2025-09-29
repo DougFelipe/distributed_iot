@@ -195,6 +195,114 @@ public class IoTGateway {
     }
     
     /**
+     * Trata falha de Data Receiver com tentativa de recuperação automática
+     */
+    private void handleReceiverFailureWithRecovery(DataReceiver failedReceiver, IoTMessage message) {
+        logger.warn("⚠️ [TOLERÂNCIA_FALHAS] Detectada falha no receptor {}", failedReceiver.getReceiverId());
+        
+        // Notificar Strategy sobre a falha
+        receiverStrategy.handleReceiverFailure(failedReceiver, dataReceivers);
+        
+        // Tentar rotear para outro receptor disponível
+        DataReceiver alternativeReceiver = receiverStrategy.selectReceiver(message, dataReceivers);
+        
+        if (alternativeReceiver != null && !alternativeReceiver.equals(failedReceiver)) {
+            logger.info("🔄 [FAILOVER] Tentando rotear para receptor alternativo: {}", 
+                       alternativeReceiver.getReceiverId());
+            
+            boolean recoverySuccess = routeMessageToDataReceiver(message, alternativeReceiver);
+            
+            if (recoverySuccess) {
+                logger.info("✅ [FAILOVER] Mensagem {} recuperada com sucesso via {}", 
+                           message.getMessageId(), alternativeReceiver.getReceiverId());
+            } else {
+                logger.error("❌ [FAILOVER] Falha na recuperação - Mensagem {} perdida", 
+                            message.getMessageId());
+            }
+        } else {
+            logger.error("❌ [FAILOVER] Nenhum receptor alternativo disponível - Sistema degradado");
+        }
+        
+        // Notificar observers sobre falha do sistema
+        notifyObservers("RECEIVER_FAILURE", failedReceiver);
+    }
+    
+    /**
+     * Simula falha de um Data Receiver específico (para testes)
+     */
+    public void simulateReceiverFailure(String receiverId) {
+        DataReceiver receiver = dataReceivers.stream()
+                .filter(r -> r.getReceiverId().equals(receiverId))
+                .findFirst()
+                .orElse(null);
+        
+        if (receiver != null) {
+            logger.warn("💥 [TESTE_FALHAS] Simulando falha do receptor {}", receiverId);
+            receiver.simulateFailure();
+            
+            // Remover temporariamente da lista ativa
+            dataReceivers.remove(receiver);
+            
+            logger.warn("⚠️ [TESTE_FALHAS] Receptor {} removido da lista ativa (Total: {})", 
+                       receiverId, dataReceivers.size());
+        }
+    }
+    
+    /**
+     * Cria nova instância de Data Receiver para recuperação
+     */
+    public boolean createNewReceiverInstance(String receiverId, int port) {
+        try {
+            logger.info("🆕 [RECUPERAÇÃO] Criando nova instância do receptor {} na porta {}", receiverId, port);
+            
+            DataReceiver newReceiver = new DataReceiver(receiverId, port);
+            newReceiver.start();
+            
+            // Registrar nova instância
+            boolean registered = registerDataReceiver(newReceiver);
+            
+            if (registered) {
+                logger.info("✅ [RECUPERAÇÃO] Nova instância {} criada e registrada com sucesso", receiverId);
+                return true;
+            } else {
+                logger.error("❌ [RECUPERAÇÃO] Falha ao registrar nova instância {}", receiverId);
+                newReceiver.stop();
+                return false;
+            }
+            
+        } catch (Exception e) {
+            logger.error("❌ [RECUPERAÇÃO] Erro ao criar nova instância {}: {}", receiverId, e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Verifica saúde de todos os Data Receivers
+     */
+    public void performHealthCheck() {
+        logger.debug("🏥 [HEALTH_CHECK] Verificando saúde de {} receptores", dataReceivers.size());
+        
+        int healthy = 0;
+        int unhealthy = 0;
+        
+        for (DataReceiver receiver : new ArrayList<>(dataReceivers)) {
+            if (receiver.isHealthy()) {
+                healthy++;
+            } else {
+                unhealthy++;
+                logger.warn("⚠️ [HEALTH_CHECK] Receptor {} não está saudável", receiver.getReceiverId());
+            }
+        }
+        
+        logger.info("🏥 [HEALTH_CHECK] Status: {} saudáveis, {} com problemas", healthy, unhealthy);
+        
+        if (unhealthy > 0) {
+            logger.warn("⚠️ [SYSTEM_STATUS] Sistema operando em modo degradado - {}/{} receptores ativos", 
+                       healthy, dataReceivers.size());
+        }
+    }
+    
+    /**
      * Remove sensor do registry
      */
     public void unregisterSensor(String sensorId) {
@@ -234,8 +342,9 @@ public class IoTGateway {
     /**
      * PROXY PATTERN - Roteia mensagem para Data Receivers (Instâncias B)
      * Gateway NÃO processa dados diretamente - apenas roteia
+     * @return true se roteamento foi bem-sucedido, false caso contrário
      */
-    public void routeToDataReceiver(IoTMessage message, String senderHost, int senderPort) {
+    public boolean routeToDataReceiver(IoTMessage message, String senderHost, int senderPort) {
         totalMessages.incrementAndGet();
         
         // Atualizar heartbeat do sensor
@@ -251,7 +360,7 @@ public class IoTGateway {
         
         if (selectedReceiver == null) {
             logger.error("❌ [PROXY] ERRO: Nenhum Data Receiver disponível para mensagem {}", message.getMessageId());
-            return;
+            return false;
         }
         
         // Rotear para o Data Receiver selecionado
@@ -267,10 +376,15 @@ public class IoTGateway {
             
             // Tratar falha do receptor
             receiverStrategy.handleReceiverFailure(selectedReceiver, dataReceivers);
+            
+            // Notificar observers sobre roteamento
+            notifyObservers("MESSAGE_ROUTED", message);
+            return false;
         }
         
         // Notificar observers sobre roteamento
-        notifyObservers("MESSAGE_ROUTED", message);  
+        notifyObservers("MESSAGE_ROUTED", message);
+        return true;
     }
     
     /**
