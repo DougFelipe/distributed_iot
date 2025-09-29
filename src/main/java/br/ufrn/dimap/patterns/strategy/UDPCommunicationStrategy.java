@@ -267,16 +267,16 @@ public class UDPCommunicationStrategy implements CommunicationStrategy {
                     );
                     
                 case "SENSOR_DATA":
-                    // Formato: SENSOR_DATA|SENSOR_ID|VALOR|UNIDADE|TIMESTAMP
-                    double value = parts.length > 2 ? Double.parseDouble(parts[2]) : 0.0;
-                    String unit = parts.length > 3 ? parts[3] : "";
+                    // Formato: SENSOR_DATA|SENSOR_ID|SENSOR_TYPE|LOCATION|TIMESTAMP|VALOR
+                    String dataType = parts.length > 2 ? parts[2] : "UNKNOWN";
+                    double dataValue = parts.length > 5 ? Double.parseDouble(parts[5]) : 0.0;
                     
                     return new IoTMessage(
                         sensorId,
                         IoTMessage.MessageType.SENSOR_DATA,
-                        "Dados via JMeter: " + value + " " + unit,
-                        value,
-                        unit,
+                        "Dados via JMeter: " + dataType + " valor " + dataValue,
+                        dataValue,
+                        dataType,
                         versionVector
                     );
                     

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
   <hashTree>
-    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="🔋 Sistema IoT Distribuído - Teste Completo Final">
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="�️ Sistema IoT - Teste de Resiliência CORRIGIDO">
       <stringProp name="TestPlan.comments">
-        🎯 SISTEMA IOT DISTRIBUÍDO - TESTE FINAL DE APRESENTAÇÃO
+        🛡️ SISTEMA IOT DISTRIBUÍDO - TESTE DE RESILIÊNCIA CORRIGIDO
         
         📊 Arquitetura Final:
         ✅ Instâncias A: Sensores IoT (Stateless) - TEMPERATURA e UMIDADE
@@ -11,12 +11,12 @@
         ✅ Gateway: Proxy roteando mensagens para Data Receivers
         ✅ Tolerância a Falhas: Recuperação automática e monitoramento
         
-        🧪 Cenários de Teste:
-        1. ✅ Zero erros em operação normal (todos os receivers online)
-        2. ⚠️ Aumento de erros ao desligar receivers (falha simulada)
-        3. 🔄 Diminuição de erros na recuperação automática
+        🧪 Cenários de Teste CORRIGIDOS:
+        ✅ SERVIDOR ONLINE: 0% erros (waitResponse=true + SUCCESS assertion)
+        ❌ SERVIDOR OFFLINE: 100% erros (timeout + assertion failure)
+        🔄 RECUPERAÇÃO: Erros diminuem quando servidor volta
         
-        🎪 PRONTO PARA APRESENTAÇÃO! 🎪
+        🛡️ TESTE DE RESILIÊNCIA REAL! 🛡️
       </stringProp>
       <boolProp name="TestPlan.functional_mode">false</boolProp>
       <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
@@ -49,17 +49,28 @@
           <stringProp name="hostname">localhost</stringProp>
           <stringProp name="port">9090</stringProp>
           <stringProp name="data">SENSOR_REGISTER|SENSOR_${__threadNum}_${__Random(1,999)}|TEMPERATURE|Lab-DIMAP-${__threadNum}|${__time()}|${__Random(20,35)}.${__Random(0,9)}</stringProp>
-          <stringProp name="timeout">5000</stringProp>
+          <stringProp name="timeout">3000</stringProp>
           <boolProp name="closeConnection">false</boolProp>
           <boolProp name="soLinger">false</boolProp>
           <stringProp name="eolByte"></stringProp>
-          <boolProp name="waitresponse">false</boolProp>
+          <boolProp name="waitresponse">true</boolProp>
           <boolProp name="closechannel">false</boolProp>
           <stringProp name="encodeclass"></stringProp>
           <stringProp name="bind_address"></stringProp>
           <stringProp name="bind_port"></stringProp>
         </kg.apc.jmeter.samplers.UDPSampler>
-        <hashTree/>
+        <hashTree>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="✅ Resposta SUCCESS Obrigatória" enabled="true">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="-1149187101">SUCCESS</stringProp>
+            </collectionProp>
+            <stringProp name="Assertion.custom_message">ERRO: Sistema não respondeu com SUCCESS - pode estar offline!</stringProp>
+            <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
+            <boolProp name="Assertion.assume_success">false</boolProp>
+            <intProp name="Assertion.test_type">2</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+        </hashTree>
         <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="⏱️ Delay Realistic" enabled="true">
           <stringProp name="ConstantTimer.delay">100</stringProp>
         </ConstantTimer>
@@ -68,33 +79,55 @@
           <stringProp name="hostname">localhost</stringProp>
           <stringProp name="port">9090</stringProp>
           <stringProp name="data">SENSOR_DATA|SENSOR_${__threadNum}_${__Random(1,999)}|TEMPERATURE|Lab-DIMAP-${__threadNum}|${__time()}|${__Random(15,40)}.${__Random(0,9)}</stringProp>
-          <stringProp name="timeout">5000</stringProp>
+          <stringProp name="timeout">3000</stringProp>
           <boolProp name="closeConnection">false</boolProp>
           <boolProp name="soLinger">false</boolProp>
           <stringProp name="eolByte"></stringProp>
-          <boolProp name="waitresponse">false</boolProp>
+          <boolProp name="waitresponse">true</boolProp>
           <boolProp name="closechannel">false</boolProp>
           <stringProp name="encodeclass"></stringProp>
           <stringProp name="bind_address"></stringProp>
           <stringProp name="bind_port"></stringProp>
         </kg.apc.jmeter.samplers.UDPSampler>
-        <hashTree/>
-        <kg.apc.jmeter.samplers.UDPSampler guiclass="kg.apc.jmeter.samplers.UDPSamplerGui" testclass="kg.apc.jmeter.samplers.UDPSampler" testname="💧 Envio Dados Umidade">
+        <hashTree>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="✅ Resposta SUCCESS Obrigatória" enabled="true">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="-1149187101">SUCCESS</stringProp>
+            </collectionProp>
+            <stringProp name="Assertion.custom_message">ERRO: Sistema não respondeu com SUCCESS - pode estar offline!</stringProp>
+            <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
+            <boolProp name="Assertion.assume_success">false</boolProp>
+            <intProp name="Assertion.test_type">2</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+        </hashTree>
+        <kg.apc.jmeter.samplers.UDPSampler guiclass="kg.apc.jmeter.samplers.UDPSamplerGui" testclass="kg.apc.jmeter.samplers.UDPSampler" testname="💧 Envio Dados Umidade" enabled="true">
           <stringProp name="hostname">localhost</stringProp>
           <stringProp name="port">9090</stringProp>
           <stringProp name="data">SENSOR_DATA|SENSOR_${__threadNum}_${__Random(1,999)}|HUMIDITY|Lab-DIMAP-${__threadNum}|${__time()}|${__Random(45,85)}.${__Random(0,9)}</stringProp>
-          <stringProp name="timeout">5000</stringProp>
+          <stringProp name="timeout">3000</stringProp>
           <boolProp name="closeConnection">false</boolProp>
           <boolProp name="soLinger">false</boolProp>
           <stringProp name="eolByte"></stringProp>
-          <boolProp name="waitresponse">false</boolProp>
+          <boolProp name="waitresponse">true</boolProp>
           <boolProp name="closechannel">false</boolProp>
           <stringProp name="encodeclass"></stringProp>
           <stringProp name="bind_address"></stringProp>
           <stringProp name="bind_port"></stringProp>
         </kg.apc.jmeter.samplers.UDPSampler>
-        <hashTree/>
-        <kg.apc.jmeter.vizualizers.CorrectedResultCollector guiclass="kg.apc.jmeter.vizualizers.TransactionsPerSecondGui" testclass="kg.apc.jmeter.vizualizers.CorrectedResultCollector" testname="jp@gc - Transactions per Second">
+        <hashTree>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="✅ Resposta SUCCESS Obrigatória" enabled="true">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="-1149187101">SUCCESS</stringProp>
+            </collectionProp>
+            <stringProp name="Assertion.custom_message">ERRO: Sistema não respondeu com SUCCESS - pode estar offline!</stringProp>
+            <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
+            <boolProp name="Assertion.assume_success">false</boolProp>
+            <intProp name="Assertion.test_type">2</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+        </hashTree>
+        <kg.apc.jmeter.vizualizers.CorrectedResultCollector guiclass="kg.apc.jmeter.vizualizers.TransactionsPerSecondGui" testclass="kg.apc.jmeter.vizualizers.CorrectedResultCollector" testname="jp@gc - Transactions per Second" enabled="true">
           <boolProp name="ResultCollector.error_logging">false</boolProp>
           <objProp>
             <name>saveConfig</name>
@@ -139,7 +172,7 @@
           <boolProp name="exclude_checkbox_state">false</boolProp>
         </kg.apc.jmeter.vizualizers.CorrectedResultCollector>
         <hashTree/>
-        <ResultCollector guiclass="GraphVisualizer" testclass="ResultCollector" testname="📉 Response Times Graph">
+        <ResultCollector guiclass="GraphVisualizer" testclass="ResultCollector" testname="📉 Response Times Graph" enabled="true">
           <boolProp name="ResultCollector.error_logging">false</boolProp>
           <objProp>
             <name>saveConfig</name>
@@ -176,7 +209,7 @@
           <stringProp name="filename">jmeter/results/response_times_final.jtl</stringProp>
         </ResultCollector>
         <hashTree/>
-        <kg.apc.jmeter.vizualizers.CorrectedResultCollector guiclass="kg.apc.jmeter.vizualizers.ResponseTimesOverTimeGui" testclass="kg.apc.jmeter.vizualizers.CorrectedResultCollector" testname="jp@gc - Response Times Over Time">
+        <kg.apc.jmeter.vizualizers.CorrectedResultCollector guiclass="kg.apc.jmeter.vizualizers.ResponseTimesOverTimeGui" testclass="kg.apc.jmeter.vizualizers.CorrectedResultCollector" testname="jp@gc - Response Times Over Time" enabled="true">
           <boolProp name="ResultCollector.error_logging">false</boolProp>
           <objProp>
             <name>saveConfig</name>
@@ -222,7 +255,7 @@
         </kg.apc.jmeter.vizualizers.CorrectedResultCollector>
         <hashTree/>
       </hashTree>
-      <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="📈 Summary Report">
+      <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="📈 Summary Report" enabled="true">
         <boolProp name="ResultCollector.error_logging">false</boolProp>
         <objProp>
           <name>saveConfig</name>
@@ -259,7 +292,7 @@
         <stringProp name="filename">jmeter/results/summary_final.jtl</stringProp>
       </ResultCollector>
       <hashTree/>
-      <ResultCollector guiclass="StatVisualizer" testclass="ResultCollector" testname="📊 Aggregate Report">
+      <ResultCollector guiclass="StatVisualizer" testclass="ResultCollector" testname="📊 Aggregate Report" enabled="true">
         <boolProp name="ResultCollector.error_logging">false</boolProp>
         <objProp>
           <name>saveConfig</name>
@@ -296,7 +329,7 @@
         <stringProp name="filename">jmeter/results/aggregate_final.jtl</stringProp>
       </ResultCollector>
       <hashTree/>
-      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="🔍 View Results Tree">
+      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="🔍 View Results Tree" enabled="true">
         <boolProp name="ResultCollector.error_logging">false</boolProp>
         <objProp>
           <name>saveConfig</name>
