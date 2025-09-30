@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
   <hashTree>
-    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="�️ Sistema IoT - Teste de Resiliência CORRIGIDO">
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="🛡️ Sistema IoT - Teste de Resiliência JSR223 FUNCIONAL">
       <stringProp name="TestPlan.comments">
-        🛡️ SISTEMA IOT DISTRIBUÍDO - TESTE DE RESILIÊNCIA CORRIGIDO
+        🛡️ SISTEMA IOT DISTRIBUÍDO - TESTE DE RESILIÊNCIA JSR223 FUNCIONAL
         
         📊 Arquitetura Final:
         ✅ Instâncias A: Sensores IoT (Stateless) - TEMPERATURA e UMIDADE
@@ -11,12 +11,16 @@
         ✅ Gateway: Proxy roteando mensagens para Data Receivers
         ✅ Tolerância a Falhas: Recuperação automática e monitoramento
         
-        🧪 Cenários de Teste CORRIGIDOS:
-        ✅ SERVIDOR ONLINE: 0% erros (waitResponse=true + SUCCESS assertion)
+        🧪 Cenários de Teste FUNCIONAIS COM JSR223:
+        ✅ SERVIDOR ONLINE: 0% erros (UDP via Java puro + SUCCESS assertions)
         ❌ SERVIDOR OFFLINE: 100% erros (timeout + assertion failure)
         🔄 RECUPERAÇÃO: Erros diminuem quando servidor volta
         
-        🛡️ TESTE DE RESILIÊNCIA REAL! 🛡️
+        🎯 SOLUÇÃO DEFINITIVA PARA PROBLEMA UDP JMETER! 🎯
+        
+        ⚡ Usando JSR223 Samplers em vez do plugin UDP problemático
+        ⚡ Código Java/Groovy puro para controle total do UDP
+        ⚡ Mesma estrutura e lógica do arquivo original
       </stringProp>
       <boolProp name="TestPlan.functional_mode">false</boolProp>
       <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
@@ -34,7 +38,7 @@
       </elementProp>
     </TestPlan>
     <hashTree>
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="🤖 Sensores IoT - Carga Distribuída">
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="🤖 Sensores IoT - Carga Distribuída JSR223">
         <intProp name="ThreadGroup.num_threads">20</intProp>
         <intProp name="ThreadGroup.ramp_time">10</intProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
@@ -45,20 +49,95 @@
         </elementProp>
       </ThreadGroup>
       <hashTree>
-        <kg.apc.jmeter.samplers.UDPSampler guiclass="kg.apc.jmeter.samplers.UDPSamplerGui" testclass="kg.apc.jmeter.samplers.UDPSampler" testname="📡 Registro Sensor IoT" enabled="true">
-          <stringProp name="hostname">localhost</stringProp>
-          <stringProp name="port">9090</stringProp>
-          <stringProp name="data">SENSOR_REGISTER|SENSOR_${__threadNum}_${__Random(1,999)}|TEMPERATURE|Lab-DIMAP-${__threadNum}|${__time()}|${__Random(20,35)}.${__Random(0,9)}</stringProp>
-          <stringProp name="timeout">3000</stringProp>
-          <boolProp name="closeConnection">false</boolProp>
-          <boolProp name="soLinger">false</boolProp>
-          <stringProp name="eolByte"></stringProp>
-          <boolProp name="waitresponse">true</boolProp>
-          <boolProp name="closechannel">false</boolProp>
-          <stringProp name="encodeclass"></stringProp>
-          <stringProp name="bind_address"></stringProp>
-          <stringProp name="bind_port"></stringProp>
-        </kg.apc.jmeter.samplers.UDPSampler>
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="📡 Registro Sensor IoT - JSR223" enabled="true">
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="script">import java.net.*
+import java.io.*
+
+try {
+    // Obter variáveis do Test Plan
+    def gatewayHost = vars.get(&quot;GATEWAY_HOST&quot;)
+    def gatewayPort = Integer.parseInt(vars.get(&quot;GATEWAY_PORT&quot;))
+    
+    // Criar socket UDP
+    def socket = new DatagramSocket()
+    
+    // Gerar dados dinâmicos (mesma lógica do arquivo original)
+    def threadNum = ctx.getThreadNum()
+    def randomId = (int)(Math.random() * 999) + 1
+    def timestamp = System.currentTimeMillis()
+    def tempValue = (int)(Math.random() * 16) + 20 // 20-35
+    def tempDecimal = (int)(Math.random() * 10)    // 0-9
+    
+    // Montar mensagem (formato original)
+    def sensorId = &quot;SENSOR_${threadNum}_${randomId}&quot;
+    def message = &quot;SENSOR_REGISTER|${sensorId}|TEMPERATURE|Lab-DIMAP-${threadNum}|${timestamp}|${tempValue}.${tempDecimal}&quot;
+    def buffer = message.getBytes()
+    
+    // Endereço do servidor
+    def address = InetAddress.getByName(gatewayHost)
+    def packet = new DatagramPacket(buffer, buffer.length, address, gatewayPort)
+    
+    log.info(&quot;📡 [REGISTRO] Enviando: &quot; + message)
+    
+    // Definir dados do sampler para JMeter
+    SampleResult.setSamplerData(&quot;UDP REGISTER Message: &quot; + message)
+    SampleResult.setRequestHeaders(&quot;Host: ${gatewayHost}:${gatewayPort}\nProtocol: UDP\nType: SENSOR_REGISTER&quot;)
+    
+    // Enviar mensagem
+    def startTime = System.currentTimeMillis()
+    socket.send(packet)
+    
+    // Aguardar resposta (timeout original: 3000ms)
+    def responseBuffer = new byte[1024]
+    def responsePacket = new DatagramPacket(responseBuffer, responseBuffer.length)
+    
+    socket.setSoTimeout(3000) // Mesmo timeout do original
+    
+    try {
+        socket.receive(responsePacket)
+        def response = new String(responsePacket.getData(), 0, responsePacket.getLength())
+        def endTime = System.currentTimeMillis()
+        
+        log.info(&quot;✅ [REGISTRO] Resposta: &quot; + response)
+        
+        // Configurar resultado do sampler
+        SampleResult.setResponseData(response, &quot;UTF-8&quot;)
+        SampleResult.setDataType(SampleResult.TEXT)
+        SampleResult.setResponseCodeOK()
+        SampleResult.setResponseMessage(&quot;UDP Response Received&quot;)
+        SampleResult.setSuccessful(true)
+        SampleResult.setLatency(endTime - startTime)
+        
+        // Verificar se contém SUCCESS (mesma lógica do original)
+        if (response.contains(&quot;SUCCESS&quot;)) {
+            log.info(&quot;🎉 [REGISTRO] Sensor registrado com sucesso!&quot;)
+        } else {
+            SampleResult.setSuccessful(false)
+            SampleResult.setResponseMessage(&quot;Sistema não respondeu com SUCCESS - pode estar offline!&quot;)
+        }
+        
+    } catch (SocketTimeoutException e) {
+        log.error(&quot;❌ [REGISTRO] Timeout UDP - Sistema pode estar offline&quot;)
+        SampleResult.setResponseData(&quot;Timeout - nenhuma resposta em 3 segundos&quot;, &quot;UTF-8&quot;)
+        SampleResult.setSuccessful(false)
+        SampleResult.setResponseCode(&quot;408&quot;)
+        SampleResult.setResponseMessage(&quot;Request Timeout&quot;)
+    }
+    
+    socket.close()
+    
+} catch (Exception e) {
+    log.error(&quot;❌ [REGISTRO] Erro UDP: &quot; + e.getMessage())
+    SampleResult.setResponseData(&quot;Erro: &quot; + e.getMessage(), &quot;UTF-8&quot;)
+    SampleResult.setSuccessful(false)
+    SampleResult.setResponseCode(&quot;500&quot;)
+    SampleResult.setResponseMessage(&quot;Internal Server Error: &quot; + e.getMessage())
+}</stringProp>
+          <stringProp name="scriptLanguage">groovy</stringProp>
+        </JSR223Sampler>
         <hashTree>
           <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="✅ Resposta SUCCESS Obrigatória" enabled="true">
             <collectionProp name="Asserion.test_strings">
@@ -75,20 +154,95 @@
           <stringProp name="ConstantTimer.delay">100</stringProp>
         </ConstantTimer>
         <hashTree/>
-        <kg.apc.jmeter.samplers.UDPSampler guiclass="kg.apc.jmeter.samplers.UDPSamplerGui" testclass="kg.apc.jmeter.samplers.UDPSampler" testname="📊 Envio Dados IoT" enabled="true">
-          <stringProp name="hostname">localhost</stringProp>
-          <stringProp name="port">9090</stringProp>
-          <stringProp name="data">SENSOR_DATA|SENSOR_${__threadNum}_${__Random(1,999)}|TEMPERATURE|Lab-DIMAP-${__threadNum}|${__time()}|${__Random(15,40)}.${__Random(0,9)}</stringProp>
-          <stringProp name="timeout">3000</stringProp>
-          <boolProp name="closeConnection">false</boolProp>
-          <boolProp name="soLinger">false</boolProp>
-          <stringProp name="eolByte"></stringProp>
-          <boolProp name="waitresponse">true</boolProp>
-          <boolProp name="closechannel">false</boolProp>
-          <stringProp name="encodeclass"></stringProp>
-          <stringProp name="bind_address"></stringProp>
-          <stringProp name="bind_port"></stringProp>
-        </kg.apc.jmeter.samplers.UDPSampler>
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="📊 Envio Dados IoT - JSR223" enabled="true">
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="script">import java.net.*
+import java.io.*
+
+try {
+    // Obter variáveis do Test Plan
+    def gatewayHost = vars.get(&quot;GATEWAY_HOST&quot;)
+    def gatewayPort = Integer.parseInt(vars.get(&quot;GATEWAY_PORT&quot;))
+    
+    // Criar socket UDP
+    def socket = new DatagramSocket()
+    
+    // Gerar dados dinâmicos (mesma lógica do arquivo original)
+    def threadNum = ctx.getThreadNum()
+    def randomId = (int)(Math.random() * 999) + 1
+    def timestamp = System.currentTimeMillis()
+    def tempValue = (int)(Math.random() * 26) + 15 // 15-40
+    def tempDecimal = (int)(Math.random() * 10)    // 0-9
+    
+    // Montar mensagem TEMPERATURA (formato original)
+    def sensorId = &quot;SENSOR_${threadNum}_${randomId}&quot;
+    def message = &quot;SENSOR_DATA|${sensorId}|TEMPERATURE|Lab-DIMAP-${threadNum}|${timestamp}|${tempValue}.${tempDecimal}&quot;
+    def buffer = message.getBytes()
+    
+    // Endereço do servidor
+    def address = InetAddress.getByName(gatewayHost)
+    def packet = new DatagramPacket(buffer, buffer.length, address, gatewayPort)
+    
+    log.info(&quot;📊 [TEMP_DATA] Enviando: &quot; + message)
+    
+    // Definir dados do sampler para JMeter
+    SampleResult.setSamplerData(&quot;UDP TEMPERATURE Data: &quot; + message)
+    SampleResult.setRequestHeaders(&quot;Host: ${gatewayHost}:${gatewayPort}\nProtocol: UDP\nType: SENSOR_DATA\nSensor: TEMPERATURE&quot;)
+    
+    // Enviar mensagem
+    def startTime = System.currentTimeMillis()
+    socket.send(packet)
+    
+    // Aguardar resposta (timeout original: 3000ms)
+    def responseBuffer = new byte[1024]
+    def responsePacket = new DatagramPacket(responseBuffer, responseBuffer.length)
+    
+    socket.setSoTimeout(3000) // Mesmo timeout do original
+    
+    try {
+        socket.receive(responsePacket)
+        def response = new String(responsePacket.getData(), 0, responsePacket.getLength())
+        def endTime = System.currentTimeMillis()
+        
+        log.info(&quot;✅ [TEMP_DATA] Resposta: &quot; + response)
+        
+        // Configurar resultado do sampler
+        SampleResult.setResponseData(response, &quot;UTF-8&quot;)
+        SampleResult.setDataType(SampleResult.TEXT)
+        SampleResult.setResponseCodeOK()
+        SampleResult.setResponseMessage(&quot;UDP Response Received&quot;)
+        SampleResult.setSuccessful(true)
+        SampleResult.setLatency(endTime - startTime)
+        
+        // Verificar se contém SUCCESS (mesma lógica do original)
+        if (response.contains(&quot;SUCCESS&quot;)) {
+            log.info(&quot;🎉 [TEMP_DATA] Dados temperatura enviados com sucesso!&quot;)
+        } else {
+            SampleResult.setSuccessful(false)
+            SampleResult.setResponseMessage(&quot;Sistema não respondeu com SUCCESS - pode estar offline!&quot;)
+        }
+        
+    } catch (SocketTimeoutException e) {
+        log.error(&quot;❌ [TEMP_DATA] Timeout UDP - Sistema pode estar offline&quot;)
+        SampleResult.setResponseData(&quot;Timeout - nenhuma resposta em 3 segundos&quot;, &quot;UTF-8&quot;)
+        SampleResult.setSuccessful(false)
+        SampleResult.setResponseCode(&quot;408&quot;)
+        SampleResult.setResponseMessage(&quot;Request Timeout&quot;)
+    }
+    
+    socket.close()
+    
+} catch (Exception e) {
+    log.error(&quot;❌ [TEMP_DATA] Erro UDP: &quot; + e.getMessage())
+    SampleResult.setResponseData(&quot;Erro: &quot; + e.getMessage(), &quot;UTF-8&quot;)
+    SampleResult.setSuccessful(false)
+    SampleResult.setResponseCode(&quot;500&quot;)
+    SampleResult.setResponseMessage(&quot;Internal Server Error: &quot; + e.getMessage())
+}</stringProp>
+          <stringProp name="scriptLanguage">groovy</stringProp>
+        </JSR223Sampler>
         <hashTree>
           <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="✅ Resposta SUCCESS Obrigatória" enabled="true">
             <collectionProp name="Asserion.test_strings">
@@ -101,20 +255,95 @@
           </ResponseAssertion>
           <hashTree/>
         </hashTree>
-        <kg.apc.jmeter.samplers.UDPSampler guiclass="kg.apc.jmeter.samplers.UDPSamplerGui" testclass="kg.apc.jmeter.samplers.UDPSampler" testname="💧 Envio Dados Umidade" enabled="true">
-          <stringProp name="hostname">localhost</stringProp>
-          <stringProp name="port">9090</stringProp>
-          <stringProp name="data">SENSOR_DATA|SENSOR_${__threadNum}_${__Random(1,999)}|HUMIDITY|Lab-DIMAP-${__threadNum}|${__time()}|${__Random(45,85)}.${__Random(0,9)}</stringProp>
-          <stringProp name="timeout">3000</stringProp>
-          <boolProp name="closeConnection">false</boolProp>
-          <boolProp name="soLinger">false</boolProp>
-          <stringProp name="eolByte"></stringProp>
-          <boolProp name="waitresponse">true</boolProp>
-          <boolProp name="closechannel">false</boolProp>
-          <stringProp name="encodeclass"></stringProp>
-          <stringProp name="bind_address"></stringProp>
-          <stringProp name="bind_port"></stringProp>
-        </kg.apc.jmeter.samplers.UDPSampler>
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="💧 Envio Dados Umidade - JSR223" enabled="true">
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="script">import java.net.*
+import java.io.*
+
+try {
+    // Obter variáveis do Test Plan
+    def gatewayHost = vars.get(&quot;GATEWAY_HOST&quot;)
+    def gatewayPort = Integer.parseInt(vars.get(&quot;GATEWAY_PORT&quot;))
+    
+    // Criar socket UDP
+    def socket = new DatagramSocket()
+    
+    // Gerar dados dinâmicos (mesma lógica do arquivo original)
+    def threadNum = ctx.getThreadNum()
+    def randomId = (int)(Math.random() * 999) + 1
+    def timestamp = System.currentTimeMillis()
+    def humidityValue = (int)(Math.random() * 41) + 45 // 45-85
+    def humidityDecimal = (int)(Math.random() * 10)    // 0-9
+    
+    // Montar mensagem UMIDADE (formato original)
+    def sensorId = &quot;SENSOR_${threadNum}_${randomId}&quot;
+    def message = &quot;SENSOR_DATA|${sensorId}|HUMIDITY|Lab-DIMAP-${threadNum}|${timestamp}|${humidityValue}.${humidityDecimal}&quot;
+    def buffer = message.getBytes()
+    
+    // Endereço do servidor
+    def address = InetAddress.getByName(gatewayHost)
+    def packet = new DatagramPacket(buffer, buffer.length, address, gatewayPort)
+    
+    log.info(&quot;💧 [HUMIDITY_DATA] Enviando: &quot; + message)
+    
+    // Definir dados do sampler para JMeter
+    SampleResult.setSamplerData(&quot;UDP HUMIDITY Data: &quot; + message)
+    SampleResult.setRequestHeaders(&quot;Host: ${gatewayHost}:${gatewayPort}\nProtocol: UDP\nType: SENSOR_DATA\nSensor: HUMIDITY&quot;)
+    
+    // Enviar mensagem
+    def startTime = System.currentTimeMillis()
+    socket.send(packet)
+    
+    // Aguardar resposta (timeout original: 3000ms)
+    def responseBuffer = new byte[1024]
+    def responsePacket = new DatagramPacket(responseBuffer, responseBuffer.length)
+    
+    socket.setSoTimeout(3000) // Mesmo timeout do original
+    
+    try {
+        socket.receive(responsePacket)
+        def response = new String(responsePacket.getData(), 0, responsePacket.getLength())
+        def endTime = System.currentTimeMillis()
+        
+        log.info(&quot;✅ [HUMIDITY_DATA] Resposta: &quot; + response)
+        
+        // Configurar resultado do sampler
+        SampleResult.setResponseData(response, &quot;UTF-8&quot;)
+        SampleResult.setDataType(SampleResult.TEXT)
+        SampleResult.setResponseCodeOK()
+        SampleResult.setResponseMessage(&quot;UDP Response Received&quot;)
+        SampleResult.setSuccessful(true)
+        SampleResult.setLatency(endTime - startTime)
+        
+        // Verificar se contém SUCCESS (mesma lógica do original)
+        if (response.contains(&quot;SUCCESS&quot;)) {
+            log.info(&quot;🎉 [HUMIDITY_DATA] Dados umidade enviados com sucesso!&quot;)
+        } else {
+            SampleResult.setSuccessful(false)
+            SampleResult.setResponseMessage(&quot;Sistema não respondeu com SUCCESS - pode estar offline!&quot;)
+        }
+        
+    } catch (SocketTimeoutException e) {
+        log.error(&quot;❌ [HUMIDITY_DATA] Timeout UDP - Sistema pode estar offline&quot;)
+        SampleResult.setResponseData(&quot;Timeout - nenhuma resposta em 3 segundos&quot;, &quot;UTF-8&quot;)
+        SampleResult.setSuccessful(false)
+        SampleResult.setResponseCode(&quot;408&quot;)
+        SampleResult.setResponseMessage(&quot;Request Timeout&quot;)
+    }
+    
+    socket.close()
+    
+} catch (Exception e) {
+    log.error(&quot;❌ [HUMIDITY_DATA] Erro UDP: &quot; + e.getMessage())
+    SampleResult.setResponseData(&quot;Erro: &quot; + e.getMessage(), &quot;UTF-8&quot;)
+    SampleResult.setSuccessful(false)
+    SampleResult.setResponseCode(&quot;500&quot;)
+    SampleResult.setResponseMessage(&quot;Internal Server Error: &quot; + e.getMessage())
+}</stringProp>
+          <stringProp name="scriptLanguage">groovy</stringProp>
+        </JSR223Sampler>
         <hashTree>
           <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="✅ Resposta SUCCESS Obrigatória" enabled="true">
             <collectionProp name="Asserion.test_strings">
@@ -206,7 +435,7 @@
               <connectTime>true</connectTime>
             </value>
           </objProp>
-          <stringProp name="filename">jmeter/results/response_times_final.jtl</stringProp>
+          <stringProp name="filename">jmeter/results/response_times_jsr223.jtl</stringProp>
         </ResultCollector>
         <hashTree/>
         <kg.apc.jmeter.vizualizers.CorrectedResultCollector guiclass="kg.apc.jmeter.vizualizers.ResponseTimesOverTimeGui" testclass="kg.apc.jmeter.vizualizers.CorrectedResultCollector" testname="jp@gc - Response Times Over Time" enabled="true">
@@ -255,7 +484,7 @@
         </kg.apc.jmeter.vizualizers.CorrectedResultCollector>
         <hashTree/>
       </hashTree>
-      <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="📈 Summary Report">
+      <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="📈 Summary Report" enabled="true">
         <boolProp name="ResultCollector.error_logging">false</boolProp>
         <objProp>
           <name>saveConfig</name>
@@ -289,10 +518,10 @@
             <connectTime>true</connectTime>
           </value>
         </objProp>
-        <stringProp name="filename">jmeter/results/summary_final.jtl</stringProp>
+        <stringProp name="filename">jmeter/results/summary_jsr223.jtl</stringProp>
       </ResultCollector>
       <hashTree/>
-      <ResultCollector guiclass="StatVisualizer" testclass="ResultCollector" testname="📊 Aggregate Report">
+      <ResultCollector guiclass="StatVisualizer" testclass="ResultCollector" testname="📊 Aggregate Report" enabled="true">
         <boolProp name="ResultCollector.error_logging">false</boolProp>
         <objProp>
           <name>saveConfig</name>
@@ -326,10 +555,10 @@
             <connectTime>true</connectTime>
           </value>
         </objProp>
-        <stringProp name="filename">jmeter/results/aggregate_final.jtl</stringProp>
+        <stringProp name="filename">jmeter/results/aggregate_jsr223.jtl</stringProp>
       </ResultCollector>
       <hashTree/>
-      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="🔍 View Results Tree">
+      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="🔍 View Results Tree" enabled="true">
         <boolProp name="ResultCollector.error_logging">false</boolProp>
         <objProp>
           <name>saveConfig</name>
@@ -363,7 +592,7 @@
             <connectTime>true</connectTime>
           </value>
         </objProp>
-        <stringProp name="filename">jmeter/results/detailed_final.jtl</stringProp>
+        <stringProp name="filename">jmeter/results/detailed_jsr223.jtl</stringProp>
       </ResultCollector>
       <hashTree/>
     </hashTree>

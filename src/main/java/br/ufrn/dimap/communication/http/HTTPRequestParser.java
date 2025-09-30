@@ -107,6 +107,7 @@ public class HTTPRequestParser {
             String sensorTypeStr = extractParameter(request, "type", "sensorType");
             String location = extractParameter(request, "location", "lab");
             String valueStr = extractParameter(request, "value", "reading");
+            String versionVectorStr = extractParameter(request, "versionVector", "vv");
             
             if (sensorId == null || sensorTypeStr == null) {
                 return null;
@@ -128,16 +129,94 @@ public class HTTPRequestParser {
                 }
             }
             
+            // Processar Version Vector
+            java.util.concurrent.ConcurrentHashMap<String, Integer> versionVector = 
+                new java.util.concurrent.ConcurrentHashMap<>();
+                
+            if (versionVectorStr != null && !versionVectorStr.trim().isEmpty()) {
+                try {
+                    versionVector = parseVersionVector(versionVectorStr);
+                    System.out.println("🔄 [HTTP] Version Vector recebido: " + versionVector);
+                } catch (Exception e) {
+                    System.err.println("⚠️ [HTTP] Erro ao parsear Version Vector, criando novo: " + e.getMessage());
+                    versionVector.put(sensorId, 1);
+                }
+            } else {
+                // Criar Version Vector inicial para novo sensor
+                versionVector.put(sensorId, 1);
+                System.out.println("🆕 [HTTP] Novo Version Vector criado para " + sensorId + ": " + versionVector);
+            }
+            
+            // Incrementar Version Vector para este sensor
+            versionVector.compute(sensorId, (k, v) -> (v == null) ? 1 : v + 1);
+            
             String content = location != null ? location : "HTTP-Client";
             
-            return new IoTMessage(sensorId, messageType, content, 
-                                value, sensorTypeStr, 
-                                new java.util.concurrent.ConcurrentHashMap<>());
+            IoTMessage message = new IoTMessage(sensorId, messageType, content, 
+                                value, sensorTypeStr, versionVector);
+            
+            System.out.println("✅ [HTTP] Mensagem IoT criada - Sensor: " + sensorId + 
+                             ", VV: " + versionVector + ", Timestamp: " + message.getTimestamp());
+            
+            return message;
             
         } catch (Exception e) {
             System.err.println("❌ Erro ao parsear HTTP para IoTMessage: " + e.getMessage());
             return null;
         }
+    }
+    
+    /**
+     * Parseia Version Vector de formato JSON ou string simples
+     * Formatos suportados:
+     * - JSON: {"sensor1":5,"sensor2":3}  
+     * - Simple: sensor1:5,sensor2:3
+     */
+    private java.util.concurrent.ConcurrentHashMap<String, Integer> parseVersionVector(String vvStr) {
+        java.util.concurrent.ConcurrentHashMap<String, Integer> vv = 
+            new java.util.concurrent.ConcurrentHashMap<>();
+            
+        if (vvStr == null || vvStr.trim().isEmpty()) {
+            return vv;
+        }
+        
+        try {
+            // Formato JSON: {"sensor1":5,"sensor2":3}
+            if (vvStr.trim().startsWith("{")) {
+                String jsonContent = vvStr.trim()
+                    .replaceFirst("^\\{", "")
+                    .replaceFirst("\\}$", "");
+                    
+                if (!jsonContent.isEmpty()) {
+                    String[] pairs = jsonContent.split(",");
+                    for (String pair : pairs) {
+                        String[] keyValue = pair.split(":");
+                        if (keyValue.length == 2) {
+                            String key = keyValue[0].trim().replaceAll("\"", "");
+                            String value = keyValue[1].trim().replaceAll("\"", "");
+                            vv.put(key, Integer.parseInt(value));
+                        }
+                    }
+                }
+            } 
+            // Formato simples: sensor1:5,sensor2:3
+            else {
+                String[] pairs = vvStr.split(",");
+                for (String pair : pairs) {
+                    String[] keyValue = pair.split(":");
+                    if (keyValue.length == 2) {
+                        String key = keyValue[0].trim();
+                        String value = keyValue[1].trim();
+                        vv.put(key, Integer.parseInt(value));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("⚠️ [HTTP] Erro ao parsear Version Vector '" + vvStr + "': " + e.getMessage());
+            // Retorna VV vazio em caso de erro
+        }
+        
+        return vv;
     }
     
     /**

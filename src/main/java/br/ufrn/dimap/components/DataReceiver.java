@@ -145,38 +145,105 @@ public class DataReceiver {
      */
     private void handleIncomingMessage(DatagramPacket packet) {
         try {
-            // Deserializar mensagem
-            ByteArrayInputStream bais = new ByteArrayInputStream(packet.getData(), 0, packet.getLength());
-            ObjectInputStream ois = new ObjectInputStream(bais);
-            IoTMessage message = (IoTMessage) ois.readObject();
-            
             String senderHost = packet.getAddress().getHostAddress();
             int senderPort = packet.getPort();
             
-            logger.debug("📬 Mensagem recebida do Gateway {}:{} - Tipo: {} - Sensor: {} - Valor: {}", 
-                        senderHost, senderPort, message.getType(), message.getSensorId(), message.getSensorValue());
+            // Primeiro tentar como string (para compatibilidade com JMeter)
+            String rawMessage = new String(packet.getData(), 0, packet.getLength()).trim();
             
-            // Processar baseado no tipo
-            switch (message.getType()) {
-                case SENSOR_DATA:
-                    processSensorData(message);
-                    break;
-                case SENSOR_REGISTER:
-                    processSensorRegistration(message);
-                    break;
-                case HEARTBEAT:
-                    processHeartbeat(message);
-                    break;
-                default:
-                    logger.debug("🔍 Tipo de mensagem ignorado: {}", message.getType());
+            IoTMessage message = null;
+            
+            // Verificar se é mensagem em formato texto (JMeter)
+            if (rawMessage.startsWith("SENSOR_DATA|")) {
+                message = parseTextMessage(rawMessage);
+                logger.debug("📬 Mensagem texto recebida de {}:{} - Raw: {}", senderHost, senderPort, rawMessage);
+            } else {
+                // Tentar deserializar como objeto Java
+                try {
+                    ByteArrayInputStream bais = new ByteArrayInputStream(packet.getData(), 0, packet.getLength());
+                    ObjectInputStream ois = new ObjectInputStream(bais);
+                    message = (IoTMessage) ois.readObject();
+                    logger.debug("📬 Mensagem objeto recebida de {}:{} - Tipo: {} - Sensor: {}", 
+                                senderHost, senderPort, message.getType(), message.getSensorId());
+                } catch (Exception serialEx) {
+                    logger.error("❌ Erro ao deserializar objeto e não é formato texto válido: {}", serialEx.getMessage());
+                    return;
+                }
             }
             
-            // Enviar ACK de volta para o Gateway
-            sendAck(message, packet.getAddress(), senderPort);
+            if (message != null) {
+                logger.debug("📬 Processando mensagem - Tipo: {} - Sensor: {} - Valor: {}", 
+                            message.getType(), message.getSensorId(), message.getSensorValue());
+                
+                // Processar baseado no tipo
+                switch (message.getType()) {
+                    case SENSOR_DATA:
+                        processSensorData(message);
+                        break;
+                    case SENSOR_REGISTER:
+                        processSensorRegistration(message);
+                        break;
+                    case HEARTBEAT:
+                        processHeartbeat(message);
+                        break;
+                    default:
+                        logger.debug("🔍 Tipo de mensagem ignorado: {}", message.getType());
+                }
+                
+                // Enviar ACK de volta para o Gateway
+                sendAck(message, packet.getAddress(), senderPort);
+            }
             
         } catch (Exception e) {
             logger.error("❌ Erro ao processar mensagem: {}", e.getMessage());
         }
+    }
+    
+    /**
+     * Converte mensagem em formato texto para objeto IoTMessage
+     * Formato: SENSOR_DATA|sensorId|tipo|valor|timestamp
+     */
+    private IoTMessage parseTextMessage(String textMessage) {
+        try {
+            String[] parts = textMessage.split("\\|");
+            if (parts.length >= 4) {
+                String sensorId = parts[1];
+                String typeStr = parts[2];
+                String value = parts[3];
+                // long timestamp = parts.length > 4 ? Long.parseLong(parts[4]) : System.currentTimeMillis();
+                
+                // Determinar tipo do sensor
+                IoTSensor.SensorType sensorType = IoTSensor.SensorType.TEMPERATURE; // padrão
+                if (typeStr.toUpperCase().contains("TEMP")) {
+                    sensorType = IoTSensor.SensorType.TEMPERATURE;
+                } else if (typeStr.toUpperCase().contains("HUM")) {
+                    sensorType = IoTSensor.SensorType.HUMIDITY;
+                }
+                
+                // Criar mensagem IoT
+                double sensorValue = 0.0;
+                try {
+                    sensorValue = Double.parseDouble(value);
+                } catch (NumberFormatException e) {
+                    logger.debug("⚠️ Valor não numérico: {}, usando 0.0", value);
+                }
+                
+                IoTMessage message = new IoTMessage(
+                    sensorId,
+                    IoTMessage.MessageType.SENSOR_DATA,
+                    "Sensor data from JMeter: " + value,
+                    sensorValue,
+                    sensorType.toString(),
+                    new ConcurrentHashMap<>()
+                );
+                
+                logger.debug("✅ Mensagem texto convertida: {} -> {}", textMessage, message);
+                return message;
+            }
+        } catch (Exception e) {
+            logger.error("❌ Erro ao converter mensagem texto: {} - Erro: {}", textMessage, e.getMessage());
+        }
+        return null;
     }
     
     /**
@@ -277,27 +344,45 @@ public class DataReceiver {
      */
     private void sendAck(IoTMessage originalMessage, InetAddress gatewayAddress, int gatewayPort) {
         try (DatagramSocket clientSocket = new DatagramSocket()) {
-            IoTMessage ackMessage = new IoTMessage(
-                receiverId,
-                IoTMessage.MessageType.ACK,
-                "ACK_FROM_" + receiverId + "_FOR_" + originalMessage.getMessageId(),
-                1.0,
-                "ACK",
-new ConcurrentHashMap<String, Integer>() {{
-                    versionVector.forEach((k, v) -> put(k, v.intValue()));
-                }}
-            );
+            // Verificar se a mensagem veio do JMeter (baseado no conteúdo)
+            boolean isFromJMeter = originalMessage.getContent() != null && 
+                                 originalMessage.getContent().contains("Sensor data from JMeter");
             
-            // Serializar e enviar
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(baos);
-            oos.writeObject(ackMessage);
-            
-            byte[] data = baos.toByteArray();
-            DatagramPacket ackPacket = new DatagramPacket(data, data.length, gatewayAddress, gatewayPort);
-            clientSocket.send(ackPacket);
-            
-            logger.debug("✅ [{}] ACK enviado para Gateway {}:{}", receiverId, gatewayAddress.getHostAddress(), gatewayPort);
+            if (isFromJMeter) {
+                // Enviar resposta em texto simples para JMeter
+                String textResponse = "SUCCESS|" + receiverId + "|" + originalMessage.getSensorId() + 
+                                    "|" + System.currentTimeMillis() + "|PROCESSED";
+                byte[] data = textResponse.getBytes();
+                DatagramPacket ackPacket = new DatagramPacket(data, data.length, gatewayAddress, gatewayPort);
+                clientSocket.send(ackPacket);
+                
+                logger.debug("✅ [{}] Resposta texto enviada para JMeter {}:{} - {}", 
+                           receiverId, gatewayAddress.getHostAddress(), gatewayPort, textResponse);
+            } else {
+                // Enviar ACK serializado para sistema interno
+                IoTMessage ackMessage = new IoTMessage(
+                    receiverId,
+                    IoTMessage.MessageType.ACK,
+                    "ACK_FROM_" + receiverId + "_FOR_" + originalMessage.getMessageId(),
+                    1.0,
+                    "ACK",
+                    new ConcurrentHashMap<String, Integer>() {{
+                        versionVector.forEach((k, v) -> put(k, v.intValue()));
+                    }}
+                );
+                
+                // Serializar e enviar
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                ObjectOutputStream oos = new ObjectOutputStream(baos);
+                oos.writeObject(ackMessage);
+                
+                byte[] data = baos.toByteArray();
+                DatagramPacket ackPacket = new DatagramPacket(data, data.length, gatewayAddress, gatewayPort);
+                clientSocket.send(ackPacket);
+                
+                logger.debug("✅ [{}] ACK objeto enviado para Gateway {}:{}", 
+                           receiverId, gatewayAddress.getHostAddress(), gatewayPort);
+            }
             
         } catch (Exception e) {
             logger.warn("⚠️ [{}] Erro ao enviar ACK: {}", receiverId, e.getMessage());

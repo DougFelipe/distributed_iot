@@ -80,16 +80,43 @@ public class HTTPResponseBuilder {
     }
     
     /**
-     * Constrói JSON de resposta de sucesso
+     * Constrói JSON de resposta de sucesso com Version Vector
      */
     private String buildSuccessJson(IoTMessage message) {
+        String versionVectorJson = buildVersionVectorJson(message.getVersionVector());
+        
         return String.format(
-            "{\"status\":\"SUCCESS\",\"messageId\":\"%s\",\"sensor\":\"%s\",\"type\":\"%s\",\"timestamp\":\"%s\",\"processed\":true}",
+            "{\"status\":\"SUCCESS\",\"messageId\":\"%s\",\"sensor\":\"%s\",\"type\":\"%s\",\"timestamp\":\"%s\",\"processed\":true,\"versionVector\":%s}",
             message.getMessageId(),
             message.getSensorId(), 
             message.getType().name(),
-            message.getTimestamp().toString()
+            message.getTimestamp().toString(),
+            versionVectorJson
         );
+    }
+    
+    /**
+     * Constrói JSON do Version Vector
+     * Formato: {"sensor1":5,"sensor2":3}
+     */
+    private String buildVersionVectorJson(java.util.concurrent.ConcurrentHashMap<String, Integer> versionVector) {
+        if (versionVector == null || versionVector.isEmpty()) {
+            return "{}";
+        }
+        
+        StringBuilder json = new StringBuilder("{");
+        boolean first = true;
+        
+        for (java.util.Map.Entry<String, Integer> entry : versionVector.entrySet()) {
+            if (!first) {
+                json.append(",");
+            }
+            json.append("\"").append(entry.getKey()).append("\":").append(entry.getValue());
+            first = false;
+        }
+        
+        json.append("}");
+        return json.toString();
     }
     
     /**

@@ -16,7 +16,8 @@ public class TCPMessageProcessor {
     
     /**
      * Processa mensagem TCP e converte para IoTMessage
-     * Formato: "SENSOR_DATA|sensor_id|type|location|timestamp|value"
+     * Formato: "SENSOR_DATA|sensor_id|type|location|timestamp|value|versionVector"
+     * Version Vector formato: "sensor1:5,sensor2:3" ou vazio
      */
     public IoTMessage processIncomingMessage(String rawMessage, String clientAddress) {
         if (rawMessage == null || rawMessage.trim().isEmpty()) {
@@ -48,6 +49,7 @@ public class TCPMessageProcessor {
             String location = tokenizer.hasMoreTokens() ? tokenizer.nextToken().trim() : clientAddress;
             if (tokenizer.hasMoreTokens()) tokenizer.nextToken(); // skip timestamp
             String valueStr = tokenizer.hasMoreTokens() ? tokenizer.nextToken().trim() : "0.0";
+            String versionVectorStr = tokenizer.hasMoreTokens() ? tokenizer.nextToken().trim() : "";
             
             // Determinar tipo de mensagem
             MessageType messageType;
@@ -70,14 +72,33 @@ public class TCPMessageProcessor {
                 System.out.println("⚠️ [TCP] Valor inválido, usando 0.0: " + valueStr);
             }
             
+            // Processar Version Vector
+            ConcurrentHashMap<String, Integer> versionVector = new ConcurrentHashMap<>();
+            
+            if (versionVectorStr != null && !versionVectorStr.trim().isEmpty()) {
+                try {
+                    versionVector = parseVersionVector(versionVectorStr);
+                    System.out.println("🔄 [TCP] Version Vector recebido: " + versionVector);
+                } catch (Exception e) {
+                    System.err.println("⚠️ [TCP] Erro ao parsear Version Vector, criando novo: " + e.getMessage());
+                    versionVector.put(sensorId, 1);
+                }
+            } else {
+                // Criar Version Vector inicial para novo sensor
+                versionVector.put(sensorId, 1);
+                System.out.println("🆕 [TCP] Novo Version Vector criado para " + sensorId + ": " + versionVector);
+            }
+            
+            // Incrementar Version Vector para este sensor
+            versionVector.compute(sensorId, (k, v) -> (v == null) ? 1 : v + 1);
+            
             // Criar IoTMessage
             IoTMessage message = new IoTMessage(sensorId, messageType, location, 
-                                              sensorValue, sensorType, 
-                                              new ConcurrentHashMap<>());
+                                              sensorValue, sensorType, versionVector);
             
             System.out.println("✅ [TCP] Mensagem processada: " + message.getMessageId() + 
                              " - Sensor: " + sensorId + " - Tipo: " + messageType + 
-                             " - Origem: " + clientAddress);
+                             " - VV: " + versionVector + " - Origem: " + clientAddress);
             
             return message;
             
@@ -85,6 +106,35 @@ public class TCPMessageProcessor {
             System.err.println("❌ [TCP] Erro ao processar mensagem: " + rawMessage + " - " + e.getMessage());
             return null;
         }
+    }
+    
+    /**
+     * Parseia Version Vector de formato simples 
+     * Formato: sensor1:5,sensor2:3,sensor3:1
+     */
+    private ConcurrentHashMap<String, Integer> parseVersionVector(String vvStr) {
+        ConcurrentHashMap<String, Integer> vv = new ConcurrentHashMap<>();
+        
+        if (vvStr == null || vvStr.trim().isEmpty()) {
+            return vv;
+        }
+        
+        try {
+            String[] pairs = vvStr.split(",");
+            for (String pair : pairs) {
+                String[] keyValue = pair.split(":");
+                if (keyValue.length == 2) {
+                    String key = keyValue[0].trim();
+                    String value = keyValue[1].trim();
+                    vv.put(key, Integer.parseInt(value));
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("⚠️ [TCP] Erro ao parsear Version Vector '" + vvStr + "': " + e.getMessage());
+            // Retorna VV vazio em caso de erro
+        }
+        
+        return vv;
     }
     
     /**
@@ -142,6 +192,67 @@ public class TCPMessageProcessor {
         }
         
         return "UNKNOWN";
+    }
+    
+    /**
+     * Serializa Version Vector para formato TCP
+     * Formato: sensor1:5,sensor2:3,sensor3:1
+     */
+    public String serializeVersionVector(ConcurrentHashMap<String, Integer> versionVector) {
+        if (versionVector == null || versionVector.isEmpty()) {
+            return "";
+        }
+        
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        for (ConcurrentHashMap.Entry<String, Integer> entry : versionVector.entrySet()) {
+            if (!first) {
+                sb.append(",");
+            }
+            sb.append(entry.getKey()).append(":").append(entry.getValue());
+            first = false;
+        }
+        
+        return sb.toString();
+    }
+    
+    /**
+     * Gera mensagem TCP com Version Vector a partir de IoTMessage
+     * Formato: "SENSOR_DATA|sensor_id|type|location|timestamp|value|versionVector"
+     */
+    public String generateTCPMessage(IoTMessage message) {
+        if (message == null) {
+            return null;
+        }
+        
+        StringBuilder msgBuilder = new StringBuilder();
+        
+        // Tipo da mensagem
+        switch (message.getType()) {
+            case SENSOR_REGISTER:
+                msgBuilder.append(MSG_SENSOR_REGISTER);
+                break;
+            case SENSOR_DATA:
+                msgBuilder.append(MSG_SENSOR_DATA);
+                break;
+            case HEARTBEAT:
+                msgBuilder.append(MSG_HEARTBEAT);
+                break;
+            default:
+                msgBuilder.append(MSG_SENSOR_DATA);
+        }
+        
+        msgBuilder.append(FIELD_SEPARATOR).append(message.getSensorId());
+        msgBuilder.append(FIELD_SEPARATOR).append(message.getSensorType());
+        msgBuilder.append(FIELD_SEPARATOR).append(message.getContent());
+        msgBuilder.append(FIELD_SEPARATOR).append(message.getTimestamp());
+        msgBuilder.append(FIELD_SEPARATOR).append(message.getSensorValue());
+        
+        // Adicionar Version Vector
+        String vvStr = serializeVersionVector(message.getVersionVector());
+        msgBuilder.append(FIELD_SEPARATOR).append(vvStr);
+        
+        return msgBuilder.toString();
     }
     
     /**
