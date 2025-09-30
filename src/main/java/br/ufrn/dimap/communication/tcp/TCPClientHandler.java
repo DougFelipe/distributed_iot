@@ -92,8 +92,8 @@ public class TCPClientHandler implements Runnable {
             processIoTMessage(inputLine, writer, clientAddress);
             
             // Para compatibilidade com JMeter TCP Sampler, fechamos após processar mensagem
-            if (inputLine.startsWith("SENSOR_")) {
-                logger.info("Fechando conexão após processar mensagem IoT para compatibilidade JMeter");
+            if (inputLine.startsWith("SENSOR_") || inputLine.startsWith("HEARTBEAT")) {
+                logger.info("Fechando conexão após processar mensagem IoT para compatibilidade JMeter: " + inputLine.substring(0, Math.min(inputLine.length(), 20)));
                 break;
             }
         }

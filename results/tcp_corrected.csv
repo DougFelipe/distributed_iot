@@ -1,2 +1,0 @@
-timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,URL,Latency,IdleTime,Connect
-1759253133541,51,TCP IoT Message,200,OK,TCP Test 1-1,text,true,,53,0,1,1,null,44,0,5
