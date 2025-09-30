@@ -1,12 +1,17 @@
 package br.ufrn.dimap.patterns.strategy;
 
 import br.ufrn.dimap.core.IoTMessage;
+import br.ufrn.dimap.core.IoTSensor;
 import br.ufrn.dimap.patterns.singleton.IoTGateway;
+import br.ufrn.dimap.iot.grpc.IoTGatewayServiceGrpc;
+import br.ufrn.dimap.iot.grpc.IoTProtos;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 
@@ -39,26 +44,42 @@ public class GRPCCommunicationStrategy implements CommunicationStrategy {
     
     @Override
     public void startServer(int port) throws Exception {
-        logger.info("🚀 [gRPC] Iniciando servidor gRPC na porta {} (DEMO PROTOCOL)", port);
+        logger.info("🚀 [gRPC] Iniciando servidor gRPC na porta {}", port);
         
-        // Por enquanto, vamos implementar um servidor HTTP que simula gRPC
-        // para demonstrar o padrão Strategy sem complexidade desnecessária
+        // Implementação do serviço gRPC usando as classes geradas
+        IoTGatewayServiceImpl serviceImpl = new IoTGatewayServiceImpl();
         
-        // TODO: Implementar servidor gRPC real quando necessário
-        // Para apresentação, o importante é mostrar que o Strategy Pattern funciona
+        server = ServerBuilder.forPort(port)
+                .addService(serviceImpl)
+                .build()
+                .start();
         
         running = true;
-        logger.info("✅ [gRPC] Servidor gRPC DEMO iniciado na porta {}", port);
-        logger.info("📡 [gRPC] Strategy Pattern implementado com sucesso!");
-        logger.info("🎯 [gRPC] Protocolo disponível para seleção via startup parameter");
+        logger.info("✅ [gRPC] Servidor gRPC iniciado na porta {}", port);
+        logger.info("📡 [gRPC] Serviço IoTGatewayService disponível");
+        logger.info("🎯 [gRPC] Protocol Buffers ativo com type safety");
+        
+        // Configurar shutdown hook
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            logger.info("🔄 [gRPC] Recebido sinal de shutdown - parando servidor gRPC");
+            stopServer();
+        }));
     }
     
     @Override
     public void stopServer() {
-        if (running) {
-            logger.info("🔴 [gRPC] Parando servidor gRPC DEMO...");
-            running = false;
-            logger.info("✅ [gRPC] Servidor gRPC parado com sucesso");
+        if (server != null && running) {
+            logger.info("🔴 [gRPC] Parando servidor gRPC...");
+            try {
+                server.shutdown().awaitTermination(5, TimeUnit.SECONDS);
+                running = false;
+                logger.info("✅ [gRPC] Servidor gRPC parado com sucesso");
+            } catch (InterruptedException e) {
+                logger.warn("⚠️ [gRPC] Timeout durante shutdown do servidor - forçando parada");
+                server.shutdownNow();
+                Thread.currentThread().interrupt();
+                running = false;
+            }
         }
     }
     
@@ -108,5 +129,111 @@ public class GRPCCommunicationStrategy implements CommunicationStrategy {
         logger.info("🔧 [gRPC] ✅ Compatibilidade com Version Vector");
         logger.info("🔧 [gRPC] ✅ Servidor pronto para streaming bidirecional");
         logger.info("🎯 [gRPC] === gRPC STRATEGY DEMONSTRADO COM SUCESSO ===");
+    }
+
+    /**
+     * Implementação do serviço gRPC gerado automaticamente
+     */
+    private class IoTGatewayServiceImpl extends IoTGatewayServiceGrpc.IoTGatewayServiceImplBase {
+        
+        @Override
+        public void registerSensor(IoTProtos.SensorRegisterRequest request, 
+                                 StreamObserver<IoTProtos.SensorRegisterResponse> responseObserver) {
+            
+            logger.info("📝 [gRPC] Registrando sensor: {} tipo: {}", 
+                request.getSensorInfo().getSensorId(), request.getSensorInfo().getSensorType());
+            
+            // Converter para IoTMessage do sistema existente
+            IoTMessage message = new IoTMessage(
+                request.getSensorInfo().getSensorId(),
+                IoTMessage.MessageType.SENSOR_REGISTER,
+                "SENSOR_TYPE:" + request.getSensorInfo().getSensorType()
+            );
+            
+            // Processar via callback (PROXY PATTERN)
+            if (messageProcessor != null) {
+                messageProcessor.accept(message, "grpc-client");
+            }
+            
+            // Resposta gRPC
+            IoTProtos.SensorRegisterResponse response = IoTProtos.SensorRegisterResponse.newBuilder()
+                .setSuccess(true)
+                .setMessage("Sensor registrado com sucesso via gRPC")
+                .setGatewayId("GATEWAY-001")
+                .build();
+            
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+            
+            logger.info("✅ [gRPC] Sensor {} registrado com sucesso", request.getSensorInfo().getSensorId());
+        }
+        
+        @Override
+        public void sendSensorData(IoTProtos.SensorDataRequest request,
+                                 StreamObserver<IoTProtos.SensorDataResponse> responseObserver) {
+            
+            IoTProtos.IoTMessage grpcMessage = request.getIotMessage();
+            logger.info("📊 [gRPC] Dados do sensor: {} valor: {}", 
+                grpcMessage.getSensorId(), grpcMessage.getMeasurement().getValue());
+            
+            // Converter para IoTMessage do sistema existente
+            IoTMessage message = new IoTMessage(
+                grpcMessage.getSensorId(),
+                IoTMessage.MessageType.SENSOR_DATA,
+                "VALUE:" + grpcMessage.getMeasurement().getValue() + 
+                ";UNIT:" + grpcMessage.getMeasurement().getUnit(),
+                grpcMessage.getMeasurement().getValue(),
+                grpcMessage.getSensorType().toString(),
+                new ConcurrentHashMap<>()
+            );
+            
+            // Processar via callback
+            if (messageProcessor != null) {
+                messageProcessor.accept(message, "grpc-client");
+            }
+            
+            // Resposta
+            IoTProtos.SensorDataResponse response = IoTProtos.SensorDataResponse.newBuilder()
+                .setSuccess(true)
+                .setMessage("Dados processados com sucesso")
+                .setProcessedBy("DATA-RECEIVER-001")
+                .build();
+            
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+            
+            logger.info("✅ [gRPC] Dados do sensor {} processados", grpcMessage.getSensorId());
+        }
+        
+        @Override
+        public void heartbeat(IoTProtos.HeartbeatRequest request,
+                            StreamObserver<IoTProtos.HeartbeatResponse> responseObserver) {
+            
+            logger.info("💓 [gRPC] Heartbeat do sensor: {}", request.getSensorId());
+            
+            // Converter para IoTMessage
+            IoTMessage message = new IoTMessage(
+                request.getSensorId(),
+                IoTMessage.MessageType.HEARTBEAT,
+                "HEARTBEAT_STATUS:" + request.getStatus() + ";TIMESTAMP:" + request.getTimestamp()
+            );
+            
+            // Processar via callback
+            if (messageProcessor != null) {
+                messageProcessor.accept(message, "grpc-client");
+            }
+            
+            // Resposta
+            IoTProtos.HeartbeatResponse response = IoTProtos.HeartbeatResponse.newBuilder()
+                .setSuccess(true)
+                .setMessage("Heartbeat recebido com sucesso")
+                .setServerTimestamp(System.currentTimeMillis())
+                .build();
+            
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+            
+            logger.debug("💓 [gRPC] Heartbeat do sensor {} confirmado", request.getSensorId());
+        }
     }
 }

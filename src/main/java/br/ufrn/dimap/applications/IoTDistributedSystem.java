@@ -335,7 +335,7 @@ public class IoTDistributedSystem {
                 String protocol = arg.substring(11).toUpperCase().trim();
                 logger.info("🔧 Protocolo definido via argumento --protocol: {}", protocol);
                 return protocol;
-            } else if (arg.matches("(?i)(UDP|HTTP|TCP)")) {
+            } else if (arg.matches("(?i)(UDP|HTTP|TCP|GRPC)")) {
                 String protocol = arg.toUpperCase().trim();
                 logger.info("🔧 Protocolo definido via argumento: {}", protocol);
                 return protocol;
