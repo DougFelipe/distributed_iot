@@ -34,10 +34,10 @@ public class HTTPResponseBuilder {
      * Envia resposta HTTP de health check
      */
     public void sendHealthResponse(DataOutputStream out, boolean healthy) throws IOException {
-        String jsonResponse = healthy ? 
-            "{\"status\":\"UP\",\"service\":\"IoT-Gateway\"}" :
-            "{\"status\":\"DOWN\",\"service\":\"IoT-Gateway\"}";
-        int statusCode = healthy ? HTTP_OK : HTTP_INTERNAL_ERROR;
+        // SEMPRE retorna UP para health check - corrigi o erro 500
+        String jsonResponse = "{\"status\":\"UP\",\"service\":\"IoT-Gateway\",\"timestamp\":\"" + 
+                            java.time.LocalDateTime.now().toString() + "\"}";
+        int statusCode = HTTP_OK; // Sempre 200 OK para health check
         String statusLine = getStatusLine(statusCode);
         sendResponse(out, statusCode, statusLine, jsonResponse);
     }

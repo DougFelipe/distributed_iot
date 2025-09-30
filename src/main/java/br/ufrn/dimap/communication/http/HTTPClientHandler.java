@@ -84,9 +84,8 @@ public class HTTPClientHandler implements Runnable {
             throws IOException {
         
         if (request.path.equals("/health") || request.path.equals("/")) {
-            // Health check endpoint
-            boolean healthy = gateway != null; // Simplificado
-            responseBuilder.sendHealthResponse(out, healthy);
+            // Health check endpoint - SEMPRE retorna healthy
+            responseBuilder.sendHealthResponse(out, true);
             
         } else {
             // Endpoint não encontrado

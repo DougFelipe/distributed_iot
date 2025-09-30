@@ -1,0 +1,2 @@
+# PARA TODOS OS PROCESSOS JAVA taskkill /F /IM java.exe
+# COMPILAR O PROJETO mvn clean compile package

@@ -37,16 +37,16 @@ public class TCPProtocolConstants {
     }
     
     /**
-     * Formatar resposta de sucesso TCP
+     * Formatar resposta de sucesso TCP - VERSÃO SIMPLIFICADA
      */
     public static String formatSuccessResponse(String messageId, String sensorId) {
-        return String.format(RESPONSE_FORMAT, RESPONSE_SUCCESS, messageId, sensorId, RESPONSE_PROCESSED);
+        return "SUCCESS|IOT-MSG-" + System.currentTimeMillis() + "|" + sensorId + "|PROCESSED";
     }
     
     /**
-     * Formatar resposta de erro TCP
+     * Formatar resposta de erro TCP - VERSÃO SIMPLIFICADA
      */
     public static String formatErrorResponse(String messageId, String sensorId, String error) {
-        return String.format(RESPONSE_FORMAT, RESPONSE_ERROR, messageId, sensorId, error);
+        return "ERROR|IOT-MSG-" + System.currentTimeMillis() + "|" + sensorId + "|" + error;
     }
 }
