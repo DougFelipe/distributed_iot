@@ -1,0 +1,22 @@
+### 🔄 Alternar Entre Protocolos
+
+O sistema permite alternar facilmente entre protocolos:
+
+```bash
+# UDP (padrão)
+java -jar target/sistema-distribuido-1.0.0.jar UDP
+
+# HTTP  
+java -jar target/sistema-distribuido-1.0.0.jar HTTP
+
+# TCP
+java -jar target/sistema-distribuido-1.0.0.jar TCP
+
+# gRPC
+java -jar target/sistema-distribuido-1.0.0.jar GRPC
+```
+- Validação de RegisterSensor, SendSensorData e Heartbeat
+📋 TODO:
+- Refinar testes JMeter para modelo de apresentação
+- Implementar menu de escolha de protocolo na aplicação
+- Adicionar opções para derrubar/subir instâncias dinamicamente"
