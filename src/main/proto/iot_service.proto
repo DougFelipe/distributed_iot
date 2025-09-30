@@ -1,0 +1,113 @@
+syntax = "proto3";
+
+package br.ufrn.dimap.iot.grpc;
+
+option java_package = "br.ufrn.dimap.iot.grpc";
+option java_outer_classname = "IoTProtos";
+
+// Serviço principal para comunicação IoT
+service IoTGatewayService {
+  // Registro de sensor
+  rpc RegisterSensor(SensorRegisterRequest) returns (SensorRegisterResponse);
+  
+  // Envio de dados do sensor
+  rpc SendSensorData(SensorDataRequest) returns (SensorDataResponse);
+  
+  // Heartbeat/Health check
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+  
+  // Streaming de dados (opcional - para casos avançados)
+  rpc StreamSensorData(stream SensorDataRequest) returns (stream SensorDataResponse);
+}
+
+// Version Vector para ordenação causal
+message VersionVector {
+  map<string, int64> vector = 1; // sensor_id -> counter
+}
+
+// Tipos de sensor
+enum SensorType {
+  TEMPERATURE = 0;
+  HUMIDITY = 1;
+  PRESSURE = 2;
+  LIGHT = 3;
+  MOTION = 4;
+}
+
+// Status do sensor
+enum SensorStatus {
+  ACTIVE = 0;
+  INACTIVE = 1;
+  ERROR = 2;
+}
+
+// Dados do sensor
+message SensorInfo {
+  string sensor_id = 1;
+  SensorType sensor_type = 2;
+  string location = 3;
+  SensorStatus status = 4;
+  int64 last_seen = 5; // timestamp
+}
+
+// Dados de medição
+message SensorMeasurement {
+  string sensor_id = 1;
+  SensorType sensor_type = 2;
+  double value = 3;
+  string unit = 4;
+  int64 timestamp = 5;
+  string location = 6;
+}
+
+// Mensagem IoT completa
+message IoTMessage {
+  string message_id = 1;
+  string sensor_id = 2;
+  SensorType sensor_type = 3;
+  string message_type = 4; // SENSOR_REGISTER, SENSOR_DATA, HEARTBEAT
+  SensorMeasurement measurement = 5;
+  VersionVector version_vector = 6;
+  int64 timestamp = 7;
+  string gateway_id = 8;
+}
+
+// === REQUEST/RESPONSE MESSAGES ===
+
+// Registro de sensor
+message SensorRegisterRequest {
+  SensorInfo sensor_info = 1;
+  VersionVector version_vector = 2;
+}
+
+message SensorRegisterResponse {
+  bool success = 1;
+  string message = 2;
+  string gateway_id = 3;
+  VersionVector updated_version_vector = 4;
+}
+
+// Dados do sensor
+message SensorDataRequest {
+  IoTMessage iot_message = 1;
+}
+
+message SensorDataResponse {
+  bool success = 1;
+  string message = 2;
+  string processed_by = 3; // qual Data Receiver processou
+  VersionVector updated_version_vector = 4;
+}
+
+// Heartbeat
+message HeartbeatRequest {
+  string sensor_id = 1;
+  SensorStatus status = 2;
+  int64 timestamp = 3;
+}
+
+message HeartbeatResponse {
+  bool success = 1;
+  string message = 2;
+  int64 server_timestamp = 3;
+}

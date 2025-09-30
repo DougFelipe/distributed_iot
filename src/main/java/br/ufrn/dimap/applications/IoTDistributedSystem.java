@@ -2,6 +2,7 @@ package br.ufrn.dimap.applications;
 
 import br.ufrn.dimap.patterns.singleton.IoTGateway;
 import br.ufrn.dimap.patterns.strategy.UDPCommunicationStrategy;
+import br.ufrn.dimap.patterns.strategy.GRPCCommunicationStrategy;
 import br.ufrn.dimap.communication.http.HTTPCommunicationStrategy;
 import br.ufrn.dimap.communication.tcp.TCPCommunicationStrategy;
 import br.ufrn.dimap.patterns.observer.HeartbeatMonitor;
@@ -408,6 +409,10 @@ public class IoTDistributedSystem {
                 configureTCPStrategy(gateway);
                 break;
                 
+            case "GRPC":
+                configureGRPCStrategy(gateway);
+                break;
+                
             default:
                 logger.warn("⚠️ Protocolo '{}' não reconhecido. Usando UDP como padrão.", protocol);
                 configureUDPStrategy(gateway);
@@ -465,5 +470,29 @@ public class IoTDistributedSystem {
         logger.info("✅ Estratégia TCP configurada na porta {}", tcpPort);
         logger.info("🔌 Servidor TCP aguardando conexões persistentes");
         logger.info("📝 Formato de mensagem: SENSOR_DATA|sensor_id|type|location|timestamp|value");
+    }
+    
+    /**
+     * Configura estratégia gRPC.
+     */
+    private static void configureGRPCStrategy(IoTGateway gateway) {
+        int grpcPort = Integer.parseInt(System.getProperty("iot.grpc.port", "9093"));
+        GRPCCommunicationStrategy grpcStrategy = new GRPCCommunicationStrategy();
+        
+        // Configurar callback para roteamento (PROXY PATTERN)
+        grpcStrategy.setMessageProcessor((message, host) -> {
+            // PROXY PATTERN - Gateway roteia mensagens para Data Receivers
+            boolean success = gateway.routeToDataReceiver(message, host, grpcPort);
+            logger.debug("🔄 [gRPC] Mensagem roteada: {} (sucesso: {})", message.getSensorId(), success);
+        });
+        
+        gateway.setCommunicationStrategy(grpcStrategy);
+        logger.info("✅ Estratégia gRPC configurada na porta {}", grpcPort);
+        logger.info("📡 gRPC Server pronto para comunicação bidirecional");
+        logger.info("🎯 Protocol Buffers: Type-safe com Version Vector");
+        logger.info("⚡ Features: Streaming, load balancing, service discovery");
+        
+        // Demonstrar features gRPC
+        grpcStrategy.demonstrateGRPCFeatures();
     }
 }
