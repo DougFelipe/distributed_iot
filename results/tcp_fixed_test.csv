@@ -1,2 +1,0 @@
-timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,URL,Latency,IdleTime,Connect
-1759251922841,10023,TCP Test Single Message,500,"org.apache.jmeter.protocol.tcp.sampler.ReadException: Error reading from server, bytes read: 0",TCP Single Test 1-1,text,false,,0,0,1,1,null,0,0,5

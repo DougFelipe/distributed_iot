@@ -117,10 +117,9 @@
           <stringProp name="TCPSampler.server">localhost</stringProp>
           <boolProp name="TCPSampler.reUseConnection">false</boolProp>
           <stringProp name="TCPSampler.port">8082</stringProp>
-          <boolProp name="TCPSampler.nodelay">true</boolProp>
+          <boolProp name="TCPSampler.nodelay">false</boolProp>
           <stringProp name="TCPSampler.timeout">5000</stringProp>
-          <stringProp name="TCPSampler.request">SENSOR_REGISTER|TEST_SENSOR|TEMPERATURE|25.0
-</stringProp>
+          <stringProp name="TCPSampler.request">SENSOR_REGISTER|TCP_SENSOR_${__threadNum}|TEMPERATURE|25.0</stringProp>
           <boolProp name="TCPSampler.closeConnection">true</boolProp>
           <stringProp name="ConfigTestElement.username"></stringProp>
           <stringProp name="ConfigTestElement.password"></stringProp>
@@ -130,23 +129,21 @@
           <stringProp name="TCPSampler.server">localhost</stringProp>
           <boolProp name="TCPSampler.reUseConnection">false</boolProp>
           <stringProp name="TCPSampler.port">8082</stringProp>
-          <boolProp name="TCPSampler.nodelay">true</boolProp>
+          <boolProp name="TCPSampler.nodelay">false</boolProp>
           <stringProp name="TCPSampler.timeout">5000</stringProp>
-          <stringProp name="TCPSampler.request">SENSOR_DATA|TEST_SENSOR|TEMPERATURE|25.5
-</stringProp>
+          <stringProp name="TCPSampler.request">SENSOR_DATA|TCP_SENSOR_${__threadNum}|TEMPERATURE|${__Random(15,35)}</stringProp>
           <boolProp name="TCPSampler.closeConnection">true</boolProp>
           <stringProp name="ConfigTestElement.username"></stringProp>
           <stringProp name="ConfigTestElement.password"></stringProp>
         </TCPSampler>
         <hashTree/>
-        <TCPSampler guiclass="TCPSamplerGui" testclass="TCPSampler" testname="TCP Heartbeat" enabled="false">
+        <TCPSampler guiclass="TCPSamplerGui" testclass="TCPSampler" testname="TCP Heartbeat" enabled="true">
           <stringProp name="TCPSampler.server">localhost</stringProp>
           <boolProp name="TCPSampler.reUseConnection">false</boolProp>
           <stringProp name="TCPSampler.port">8082</stringProp>
-          <boolProp name="TCPSampler.nodelay">true</boolProp>
+          <boolProp name="TCPSampler.nodelay">false</boolProp>
           <stringProp name="TCPSampler.timeout">5000</stringProp>
-          <stringProp name="TCPSampler.request">HEARTBEAT|TEST_SENSOR|TEMPERATURE|0
-</stringProp>
+          <stringProp name="TCPSampler.request">HEARTBEAT|TCP_SENSOR_${__threadNum}|TEMPERATURE|0</stringProp>
           <boolProp name="TCPSampler.closeConnection">true</boolProp>
           <stringProp name="ConfigTestElement.username"></stringProp>
           <stringProp name="ConfigTestElement.password"></stringProp>
