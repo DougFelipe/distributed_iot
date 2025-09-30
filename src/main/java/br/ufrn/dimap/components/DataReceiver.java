@@ -417,6 +417,48 @@ public class DataReceiver {
     }
     
     /**
+     * Método público para processar mensagem diretamente (usado pelo Gateway)
+     * @param message Mensagem IoT a ser processada
+     * @return true se processada com sucesso, false caso contrário
+     */
+    public boolean processMessage(IoTMessage message) {
+        if (!running.get()) {
+            logger.warn("⚠️ [{}] Data Receiver não está ativo, rejeitando mensagem {}", 
+                       receiverId, message.getMessageId());
+            return false;
+        }
+        
+        try {
+            logger.debug("📬 [{}] Processando mensagem direta - Tipo: {} - Sensor: {} - Valor: {}", 
+                        receiverId, message.getType(), message.getSensorId(), message.getSensorValue());
+            
+            // Processar baseado no tipo
+            switch (message.getType()) {
+                case SENSOR_DATA:
+                    processSensorData(message);
+                    break;
+                case SENSOR_REGISTER:
+                    processSensorRegistration(message);
+                    break;
+                case HEARTBEAT:
+                    processHeartbeat(message);
+                    break;
+                default:
+                    logger.debug("🔍 [{}] Tipo de mensagem ignorado: {}", receiverId, message.getType());
+                    return false;
+            }
+            
+            logger.debug("✅ [{}] Mensagem processada com sucesso: {}", receiverId, message.getMessageId());
+            return true;
+            
+        } catch (Exception e) {
+            logger.error("❌ [{}] Erro ao processar mensagem {}: {}", 
+                        receiverId, message.getMessageId(), e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
      * Simula falha do Data Receiver (para testes de tolerância a falhas)
      */
     public void simulateFailure() {

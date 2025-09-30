@@ -388,7 +388,8 @@ public class IoTGateway {
     }
     
     /**
-     * Roteia mensagem para Data Receiver específico via UDP
+     * Roteia mensagem para Data Receiver específico - SEMPRE via UDP interno
+     * Data Receivers sempre usam UDP para comunicação interna independente do protocolo de entrada
      */
     private boolean routeMessageToDataReceiver(IoTMessage message, DataReceiver receiver) {
         try {
@@ -397,8 +398,19 @@ public class IoTGateway {
                 return false;
             }
             
-            // Enviar via UDP para o Data Receiver
-            return communicationStrategy.sendMessage(message, "localhost", receiver.getPort());
+            // CORREÇÃO: Usar método direto do receiver ao invés de UDP
+            // Data Receivers processam mensagens diretamente
+            boolean processed = receiver.processMessage(message);
+            
+            if (processed) {
+                logger.debug("✅ [PROXY] Mensagem {} processada por {}", 
+                            message.getMessageId(), receiver.getReceiverId());
+                return true;
+            } else {
+                logger.warn("⚠️ [PROXY] Falha ao processar mensagem {} em {}", 
+                           message.getMessageId(), receiver.getReceiverId());
+                return false;
+            }
             
         } catch (Exception e) {
             logger.error("❌ [PROXY] Erro ao rotear para {}: {}", receiver.getReceiverId(), e.getMessage());

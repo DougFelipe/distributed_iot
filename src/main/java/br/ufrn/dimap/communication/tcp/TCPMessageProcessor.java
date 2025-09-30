@@ -105,13 +105,13 @@ public class TCPMessageProcessor {
      */
     public String generateResponse(IoTMessage processedMessage, boolean success) {
         if (processedMessage == null) {
-            return formatErrorResponse("UNKNOWN", "UNKNOWN", "INVALID_MESSAGE");
+            return TCPProtocolConstants.formatErrorResponse("UNKNOWN", "UNKNOWN", "INVALID_MESSAGE");
         }
         
         if (success) {
-            return formatSuccessResponse(processedMessage.getMessageId(), processedMessage.getSensorId());
+            return TCPProtocolConstants.formatSuccessResponse(processedMessage.getMessageId(), processedMessage.getSensorId());
         } else {
-            return formatErrorResponse(processedMessage.getMessageId(), processedMessage.getSensorId(), "PROCESSING_FAILED");
+            return TCPProtocolConstants.formatErrorResponse(processedMessage.getMessageId(), processedMessage.getSensorId(), "PROCESSING_FAILED");
         }
     }
     
