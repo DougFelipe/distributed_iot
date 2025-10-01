@@ -206,7 +206,7 @@
         </elementProp>
       </ThreadGroup>
       <hashTree>
-        <TCPSampler guiclass="TCPSamplerGui" testclass="TCPSampler" testname="TCP Sensor Registration" enabled="true">
+        <TCPSampler guiclass="TCPSamplerGui" testclass="TCPSampler" testname="TCP Sensor Registration">
           <stringProp name="TCPSampler.server">localhost</stringProp>
           <boolProp name="TCPSampler.reUseConnection">false</boolProp>
           <stringProp name="TCPSampler.port">8082</stringProp>
@@ -219,7 +219,7 @@
           <stringProp name="ConfigTestElement.password"></stringProp>
         </TCPSampler>
         <hashTree/>
-        <TCPSampler guiclass="TCPSamplerGui" testclass="TCPSampler" testname="TCP Sensor Data" enabled="true">
+        <TCPSampler guiclass="TCPSamplerGui" testclass="TCPSampler" testname="TCP Sensor Data">
           <stringProp name="TCPSampler.server">localhost</stringProp>
           <boolProp name="TCPSampler.reUseConnection">false</boolProp>
           <stringProp name="TCPSampler.port">8082</stringProp>
