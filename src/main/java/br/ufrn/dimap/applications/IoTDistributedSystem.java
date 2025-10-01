@@ -377,7 +377,7 @@ public class IoTDistributedSystem {
     /**
      * Obtém a porta padrão para cada protocolo.
      */
-    private static int getProtocolPort(String protocol) {
+    public static int getProtocolPort(String protocol) {
         switch (protocol) {
             case "UDP":
                 return Integer.parseInt(System.getProperty("iot.udp.port", String.valueOf(GATEWAY_PORT)));
@@ -393,7 +393,7 @@ public class IoTDistributedSystem {
     /**
      * Configura a estratégia de comunicação baseada no protocolo especificado.
      */
-    private static void configureCommunicationStrategy(IoTGateway gateway, String protocol) {
+    public static void configureCommunicationStrategy(IoTGateway gateway, String protocol) {
         logger.info("🔧 Configurando estratégia de comunicação: {}", protocol);
         
         switch (protocol) {

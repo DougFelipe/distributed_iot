@@ -138,6 +138,13 @@ public class IoTGateway {
     }
     
     /**
+     * Verifica se o Gateway está ativo
+     */
+    public boolean isRunning() {
+        return active;
+    }
+    
+    /**
      * Registra um sensor IoT no gateway
      */
     public boolean registerSensor(IoTSensor sensor, String host, int port) {

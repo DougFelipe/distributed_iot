@@ -19,8 +19,8 @@
     </TestPlan>
     <hashTree>
       <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="🎯 UDP JSR223 Thread">
-        <intProp name="ThreadGroup.num_threads">5</intProp>
-        <intProp name="ThreadGroup.ramp_time">2</intProp>
+        <intProp name="ThreadGroup.num_threads">50</intProp>
+        <intProp name="ThreadGroup.ramp_time">15</intProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
@@ -129,7 +129,7 @@ try {
         </ConstantTimer>
         <hashTree/>
       </hashTree>
-      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="🔍 View Results Tree" enabled="true">
+      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="🔍 View Results Tree">
         <boolProp name="ResultCollector.error_logging">false</boolProp>
         <objProp>
           <name>saveConfig</name>
@@ -166,7 +166,7 @@ try {
         <stringProp name="filename">jmeter/results/udp_jsr223_success.jtl</stringProp>
       </ResultCollector>
       <hashTree/>
-      <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="📊 Summary Report" enabled="true">
+      <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="📊 Summary Report">
         <boolProp name="ResultCollector.error_logging">false</boolProp>
         <objProp>
           <name>saveConfig</name>

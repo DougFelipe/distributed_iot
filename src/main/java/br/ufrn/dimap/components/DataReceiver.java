@@ -555,6 +555,7 @@ public class DataReceiver {
     
     // Getters para monitoramento
     public String getReceiverId() { return receiverId; }
+    public String getId() { return receiverId; } // Alias para compatibilidade
     public int getPort() { return port; }
     public boolean isRunning() { return running.get(); }
     public long getTotalMessages() { return totalMessages.get(); }
