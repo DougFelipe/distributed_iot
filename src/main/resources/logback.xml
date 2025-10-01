@@ -20,7 +20,12 @@
     <!-- Configuração específica para componentes do sistema -->
     <logger name="br.ufrn.dimap.components" level="INFO" />
     <logger name="br.ufrn.dimap.communication" level="INFO" />
-    <logger name="br.ufrn.dimap.patterns" level="DEBUG" />
+    <logger name="br.ufrn.dimap.patterns" level="WARN" />
+    
+    <!-- Reduzir ruído do FaultToleranceManager health checks -->
+    <logger name="br.ufrn.dimap.patterns.fault.FaultToleranceManager" level="WARN" />
+    <logger name="br.ufrn.dimap.patterns.observer.HeartbeatMonitor" level="WARN" />
+    <logger name="br.ufrn.dimap.patterns.replication.DataReplicationManager" level="INFO" />
 
     <root level="INFO">
         <appender-ref ref="CONSOLE" />

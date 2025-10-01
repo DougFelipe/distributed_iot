@@ -2,7 +2,21 @@ package br.ufrn.dimap.applications;
 
 import br.ufrn.dimap.patterns.singleton.IoTGateway;
 import br.ufrn.dimap.patterns.strategy.UDPCommunicationStrategy;
-import br.ufrn.dimap.patterns.strategy.GRPCCommunicationStrategy;
+import br.ufrn.dimap.patterns.strategy.GRP        System.out.println("🔄 Inicializando modo HTTP (compatível com HTTP+TCP)...");
+        
+        // Adicionar monitor de heartbeat
+        HeartbeatMonitor monitor = new HeartbeatMonitor(5);
+        gateway.addObserver(monitor);
+        
+        // Usar HTTP como protocolo principal para compatibilidade
+        int httpPort = findAvailablePort(8080);
+        gateway.setCommunicationStrategy(new HTTPCommunicationStrategy());
+        gateway.start(httpPort);
+        System.out.println("📡 Gateway HTTP ativo na porta: " + httpPort);
+        
+        // Para JMeter: usar apenas HTTP nos testes
+        System.out.println("💡 Para JMeter: configure testes HTTP na porta " + httpPort);
+        System.out.println("💡 TCP não será usado nesta versão para evitar conflitos");trategy;
 import br.ufrn.dimap.communication.http.HTTPCommunicationStrategy;
 import br.ufrn.dimap.communication.tcp.TCPCommunicationStrategy;
 import br.ufrn.dimap.patterns.observer.HeartbeatMonitor;
@@ -136,6 +150,8 @@ public class IoTSystemWithMenu {
             if (protocol.equals("HTTP+TCP")) {
                 // Modo duplo: inicializar ambos protocolos
                 initializeDualProtocol();
+                // O método initializeDualProtocol já inclui receivers e fault tolerance
+                return; // Retornar aqui para evitar execução dupla
             } else {
                 // Modo simples: um protocolo
                 initializeSingleProtocol(protocol);
@@ -211,6 +227,20 @@ public class IoTSystemWithMenu {
         // TODO: Implementar lógica para TCP simultâneo
         // Por enquanto, só HTTP será ativo
         System.out.println("⚠️ Modo TCP será ativado em versão futura");
+        
+        // Criar Data Receivers com detecção automática de portas
+        createDataReceiversWithPortDetection();
+        
+        // Iniciar sistema de tolerância a falhas
+        FaultToleranceManager faultManager = new FaultToleranceManager(gateway);
+        faultManager.start();
+        
+        System.out.println("✅ Sistema HTTP+TCP iniciado com sucesso!");
+        System.out.println("📊 Protocolo: HTTP (TCP planejado para versão futura)");
+        System.out.println("📊 Data Receivers ativos: " + receivers.size());
+        System.out.println("📊 Gateway ID: " + gateway.getGatewayId());
+        
+        Thread.sleep(1000); // Pausa para estabilização
     }
     
     /**

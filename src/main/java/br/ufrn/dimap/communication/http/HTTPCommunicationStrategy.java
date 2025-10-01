@@ -46,29 +46,31 @@ public class HTTPCommunicationStrategy implements CommunicationStrategy {
             System.out.println("🌐 HTTP Strategy Server iniciado na porta " + port);
             System.out.println("🌐 Aguardando conexões HTTP para IoT Gateway...");
             
-            // Loop principal de aceitação de conexões
-            while (running.get() && !serverSocket.isClosed()) {
-                try {
-                    Socket clientSocket = serverSocket.accept();
-                    
-                    if (!running.get()) {
-                        clientSocket.close();
-                        break;
+            // Executar loop de aceitação em thread separada para não bloquear
+            threadPool.submit(() -> {
+                while (running.get() && !serverSocket.isClosed()) {
+                    try {
+                        Socket clientSocket = serverSocket.accept();
+                        
+                        if (!running.get()) {
+                            clientSocket.close();
+                            break;
+                        }
+                        
+                        System.out.println("🌐 Nova conexão HTTP de " + clientSocket.getRemoteSocketAddress());
+                        
+                        // Processar em thread separada
+                        HTTPClientHandler handler = new HTTPClientHandler(clientSocket, gateway);
+                        threadPool.execute(handler);
+                        
+                    } catch (IOException e) {
+                        if (running.get()) {
+                            System.err.println("❌ Erro ao aceitar conexão HTTP: " + e.getMessage());
+                        }
+                        // Se não está rodando, é shutdown normal
                     }
-                    
-                    System.out.println("🌐 Nova conexão HTTP de " + clientSocket.getRemoteSocketAddress());
-                    
-                    // Processar em thread separada
-                    HTTPClientHandler handler = new HTTPClientHandler(clientSocket, gateway);
-                    threadPool.execute(handler);
-                    
-                } catch (IOException e) {
-                    if (running.get()) {
-                        System.err.println("❌ Erro ao aceitar conexão HTTP: " + e.getMessage());
-                    }
-                    // Se não está rodando, é shutdown normal
                 }
-            }
+            });
             
         } catch (IOException e) {
             running.set(false);
