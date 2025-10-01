@@ -6,6 +6,7 @@ import br.ufrn.dimap.patterns.strategy.CommunicationStrategy;
 import br.ufrn.dimap.patterns.strategy.ReceiverStrategy;
 import br.ufrn.dimap.patterns.strategy.RoundRobinReceiverStrategy;
 import br.ufrn.dimap.patterns.observer.IoTObserver;
+import br.ufrn.dimap.patterns.replication.DataReplicationManager;
 import br.ufrn.dimap.components.DataReceiver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +61,9 @@ public class IoTGateway {
     private final List<DataReceiver> dataReceivers;
     private ReceiverStrategy receiverStrategy;
     
+    // REPLICACAO DE DADOS - Sistema de replicação entre Data Receivers
+    private DataReplicationManager replicationManager;
+    
     /**
      * Construtor privado para Singleton
      */
@@ -72,6 +76,7 @@ public class IoTGateway {
         this.globalVersionVector = new ConcurrentHashMap<>();
         this.dataReceivers = new ArrayList<>();
         this.receiverStrategy = new RoundRobinReceiverStrategy();
+        this.replicationManager = new DataReplicationManager(dataReceivers);
         this.active = false;
         
         logger.info("🏭 IoT Gateway Singleton criado: {} (PROXY para Data Receivers)", gatewayId);
@@ -114,6 +119,13 @@ public class IoTGateway {
         
         // Iniciar estratégia de comunicação
         communicationStrategy.startServer(port);
+        
+        // Iniciar sistema de replicação de dados
+        if (!dataReceivers.isEmpty()) {
+            replicationManager.start();
+            logger.info("🔄 Sistema de replicação iniciado para {} Data Receivers", dataReceivers.size());
+        }
+        
         active = true;
         
         logger.info("🚀 IoT Gateway Singleton iniciado na porta {} usando {}", 
@@ -131,6 +143,12 @@ public class IoTGateway {
         
         if (communicationStrategy != null) {
             communicationStrategy.stopServer();
+        }
+        
+        // Parar sistema de replicação
+        if (replicationManager != null) {
+            replicationManager.stop();
+            logger.info("🔄 Sistema de replicação parado");
         }
         
         active = false;
@@ -179,6 +197,12 @@ public class IoTGateway {
         }
         
         dataReceivers.add(receiver);
+        
+        // Adicionar ao sistema de replicação
+        if (replicationManager != null) {
+            replicationManager.addDataReceiver(receiver);
+        }
+        
         logger.info("✅ Data Receiver registrado: {} na porta {} (Total: {})", 
                    receiver.getReceiverId(), receiver.getPort(), dataReceivers.size());
         
@@ -194,6 +218,11 @@ public class IoTGateway {
     public synchronized boolean unregisterDataReceiver(DataReceiver receiver) {
         boolean removed = dataReceivers.remove(receiver);
         if (removed) {
+            // Remover do sistema de replicação
+            if (replicationManager != null) {
+                replicationManager.removeDataReceiver(receiver);
+            }
+            
             logger.info("🗑️ Data Receiver removido: {} (Total: {})", 
                        receiver.getReceiverId(), dataReceivers.size());
             notifyObservers("RECEIVER_UNREGISTERED", receiver);
@@ -506,6 +535,11 @@ public class IoTGateway {
                          receiver.getPort(),
                          receiver.getTotalMessages()));
             }
+        }
+        
+        // Status do sistema de replicação
+        if (replicationManager != null && replicationManager.isActive()) {
+            sb.append(String.format("  %s\n", replicationManager.getReplicationStats()));
         }
         
         return sb.toString();
