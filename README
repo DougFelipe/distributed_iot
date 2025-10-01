@@ -20,3 +20,9 @@ java -jar target/sistema-distribuido-1.0.0.jar GRPC
 - Refinar testes JMeter para modelo de apresentação
 - Implementar menu de escolha de protocolo na aplicação
 - Adicionar opções para derrubar/subir instâncias dinamicamente"
+
+
+# 1. INICIAR SISTEMA IoT:
+#    UDP: mvn exec:java "-Dexec.args=UDP"
+#    TCP: mvn exec:java "-Dexec.args=TCP"  
+#    HTTP: mvn exec:java "-Dexec.args=HTTP"
