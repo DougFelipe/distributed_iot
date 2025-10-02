@@ -207,10 +207,22 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
-                <configuration>
-                    <mainClass>br.ufrn.dimap.applications.IoTDistributedSystem</mainClass>
-                </configuration>
+                <!-- Remover configuração padrão para permitir -Dexec.mainClass funcionar -->
                 <executions>
+                    <!-- Multi-Protocol Launcher -->
+                    <execution>
+                        <id>multi-protocol</id>
+                        <configuration>
+                            <mainClass>br.ufrn.dimap.applications.IoTMultiProtocolLauncher</mainClass>
+                        </configuration>
+                    </execution>
+                    <!-- Original System -->
+                    <execution>
+                        <id>original-system</id>
+                        <configuration>
+                            <mainClass>br.ufrn.dimap.applications.IoTDistributedSystem</mainClass>
+                        </configuration>
+                    </execution>
                     <!-- Sprint 2: UDP Demo -->
                     <execution>
                         <id>udp-demo</id>
