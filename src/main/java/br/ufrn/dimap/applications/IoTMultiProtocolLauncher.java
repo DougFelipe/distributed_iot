@@ -38,28 +38,32 @@ import java.util.concurrent.TimeUnit;
  * 🔧 CONFIGURAÇÃO DE PORTAS POR PROTOCOLO:
  * ===============================================================================
  * 
- * HTTP:  Gateway=8081, Receivers=9001,9002
- * TCP:   Gateway=8082, Receivers=9003,9004  
- * UDP:   Gateway=9090, Receivers=9091,9092
- * GRPC:  Gateway=9999, Receivers=9005,9006
+ * HTTP:  Gateway=8081, Receivers=9001,9002  (Isolado para testes simultâneos)
+ * TCP:   Gateway=8082, Receivers=9003,9004  (Isolado para testes simultâneos)
+ * UDP:   Gateway=9090, Receivers=9091,9092  (Portas originais do sistema)
+ * GRPC:  Gateway=9090, Receivers=9091,9092  (Portas originais do sistema)
+ * 
+ * ⚠️  IMPORTANTE: UDP e GRPC usam as mesmas portas (executar separadamente)
+ * ✅  HTTP e TCP podem executar simultaneamente (portas isoladas)
  * 
  * ===============================================================================
  */
 public class IoTMultiProtocolLauncher {
     private static final Logger log = LoggerFactory.getLogger(IoTMultiProtocolLauncher.class);
     
-    // Configuração de portas por protocolo
+    // Configuração de portas - Diferenciada apenas para HTTP e TCP
     private static final int HTTP_GATEWAY_PORT = 8081;
     private static final List<Integer> HTTP_RECEIVER_PORTS = Arrays.asList(9001, 9002);
     
     private static final int TCP_GATEWAY_PORT = 8082;
     private static final List<Integer> TCP_RECEIVER_PORTS = Arrays.asList(9003, 9004);
     
+    // UDP e GRPC usam as portas originais do sistema (9090-9092)
     private static final int UDP_GATEWAY_PORT = 9090;
     private static final List<Integer> UDP_RECEIVER_PORTS = Arrays.asList(9091, 9092);
     
-    private static final int GRPC_GATEWAY_PORT = 9999;
-    private static final List<Integer> GRPC_RECEIVER_PORTS = Arrays.asList(9005, 9006);
+    private static final int GRPC_GATEWAY_PORT = 9090;
+    private static final List<Integer> GRPC_RECEIVER_PORTS = Arrays.asList(9091, 9092);
 
     public static void main(String[] args) {
         if (args.length == 0) {
@@ -139,10 +143,34 @@ public class IoTMultiProtocolLauncher {
                 strategy = new TCPCommunicationStrategy();
                 break;
             case "UDP":
-                strategy = new UDPCommunicationStrategy();
+                UDPCommunicationStrategy udpStrategy = new UDPCommunicationStrategy();
+                
+                // Configurar callback para roteamento (PROXY PATTERN)
+                udpStrategy.setMessageProcessor((message, host, senderPort) -> {
+                    // PROXY PATTERN - Gateway roteia mensagens para Data Receivers
+                    boolean success = gateway.routeToDataReceiver(message, host, senderPort);
+                    
+                    // Enviar resposta UDP para JMeter (importante para zero erros)
+                    if (success) {
+                        udpStrategy.sendSuccessResponse(message, host, senderPort);
+                    } else {
+                        udpStrategy.sendErrorResponse(message, host, senderPort, "No available receivers");
+                    }
+                });
+                
+                strategy = udpStrategy;
                 break;
             case "GRPC":
-                strategy = new GRPCCommunicationStrategy();
+                GRPCCommunicationStrategy grpcStrategy = new GRPCCommunicationStrategy();
+                
+                // Configurar callback para roteamento (PROXY PATTERN)
+                grpcStrategy.setMessageProcessor((message, host) -> {
+                    // PROXY PATTERN - Gateway roteia mensagens para Data Receivers
+                    boolean success = gateway.routeToDataReceiver(message, host, port);
+                    log.debug("🔄 [gRPC] Mensagem roteada: {} (sucesso: {})", message.getSensorId(), success);
+                });
+                
+                strategy = grpcStrategy;
                 break;
             default:
                 throw new IllegalArgumentException("Protocolo não suportado: " + protocol);
@@ -258,10 +286,13 @@ public class IoTMultiProtocolLauncher {
         System.out.println("Uso: java IoTMultiProtocolLauncher <PROTOCOLO>");
         System.out.println("");
         System.out.println("Protocolos disponíveis:");
-        System.out.println("  HTTP  - HTTP REST API (porta 8081)");
-        System.out.println("  TCP   - TCP Socket    (porta 8082)");
-        System.out.println("  UDP   - UDP Datagram  (porta 9090)");
-        System.out.println("  GRPC  - gRPC Service  (porta 9999)");
+        System.out.println("  HTTP  - HTTP REST API (porta 8081) - Isolado");
+        System.out.println("  TCP   - TCP Socket    (porta 8082) - Isolado");
+        System.out.println("  UDP   - UDP Datagram  (porta 9090) - Original");
+        System.out.println("  GRPC  - gRPC Service  (porta 9090) - Original");
+        System.out.println("");
+        System.out.println("⚠️  NOTA: UDP e GRPC usam as mesmas portas (executar separadamente)");
+        System.out.println("✅  HTTP e TCP podem executar simultaneamente");
         System.out.println("");
         System.out.println("Exemplos:");
         System.out.println("  Terminal 1: mvn exec:java -Dexec.mainClass=\"br.ufrn.dimap.applications.IoTMultiProtocolLauncher\" -Dexec.args=\"HTTP\"");
